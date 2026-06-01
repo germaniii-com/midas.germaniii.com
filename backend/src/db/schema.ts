@@ -34,7 +34,7 @@ export const tags = pgTable('tags', {
   binderId: uuid('binder_id')
     .notNull()
     .references(() => budgetBinders.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 50 }).notNull(),
   color: varchar('color', { length: 7 }).default('#3B82F6'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

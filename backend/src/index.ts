@@ -2,6 +2,7 @@ import 'dotenv/config';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { binderRoutes } from './routes/binders';
+import { tagRoutes } from './routes/tags';
 
 const app = Fastify({ logger: true });
 
@@ -12,6 +13,7 @@ async function routes(app: FastifyInstance) {
     return { status: 'ok' };
   });
   app.register(binderRoutes);
+  app.register(tagRoutes);
 }
 
 app.register(routes, { prefix: '/api' });

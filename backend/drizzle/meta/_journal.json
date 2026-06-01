@@ -15,6 +15,13 @@
       "when": 1780284731573,
       "tag": "0001_add_binders_table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780290175908,
+      "tag": "0002_remove_tag_name_unique_constraint",
+      "breakpoints": true
     }
   ]
 }
