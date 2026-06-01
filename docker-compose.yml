@@ -54,10 +54,11 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: dev
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=5000
       - DATABASE_URL=postgresql://budget_user:budget_password@db:5432/actual_clone_db
       - MINIO_ENDPOINT=minio
@@ -66,6 +67,8 @@ services:
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=budget-files
       - MINIO_USE_SSL=false
+    volumes:
+      - ./backend:/app
     depends_on:
       - db
       - minio-setup
@@ -75,9 +78,12 @@ services:
   web:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.web
+      dockerfile: Dockerfile
+      target: dev
     ports:
-      - "80:80"
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
     depends_on:
       - api
     restart: always
