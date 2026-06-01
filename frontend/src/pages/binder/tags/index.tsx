@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Spinner } from '@heroui/react';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { getTags, deleteTag, type Tag } from '../../../api/tags';
+import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { getTags, type Tag } from '../../../api/tags';
 import { useTheme } from '../../../hooks/useTheme';
 
 export default function TagsPage() {
@@ -12,7 +12,6 @@ export default function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [deleting, setDeleting] = useState<string | null>(null);
 
   async function fetchTags() {
     if (!id) return;
@@ -31,19 +30,6 @@ export default function TagsPage() {
   useEffect(() => {
     fetchTags();
   }, [id]);
-
-  async function handleDelete(tagId: string) {
-    if (!id) return;
-    setDeleting(tagId);
-    try {
-      await deleteTag(id, tagId);
-      setTags((prev) => prev.filter((t) => t.id !== tagId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete tag');
-    } finally {
-      setDeleting(null);
-    }
-  }
 
   if (loading) {
     return (
@@ -100,16 +86,6 @@ export default function TagsPage() {
                 }
               >
                 <PencilIcon width={16} />
-              </Button>
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                color="danger"
-                isLoading={deleting === tag.id}
-                onPress={() => handleDelete(tag.id)}
-              >
-                <TrashIcon width={16} />
               </Button>
             </div>
           ))}

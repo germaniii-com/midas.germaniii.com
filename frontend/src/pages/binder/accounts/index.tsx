@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Spinner } from '@heroui/react';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { getAccounts, deleteAccount, type Account } from '../../../api/accounts';
+import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { getAccounts, type Account } from '../../../api/accounts';
 
 const typeLabels: Record<string, string> = {
   checking: 'Checking',
@@ -29,7 +29,6 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [deleting, setDeleting] = useState<string | null>(null);
 
   async function fetchAccounts() {
     if (!id) return;
@@ -48,19 +47,6 @@ export default function AccountsPage() {
   useEffect(() => {
     fetchAccounts();
   }, [id]);
-
-  async function handleDelete(accountId: string) {
-    if (!id) return;
-    setDeleting(accountId);
-    try {
-      await deleteAccount(id, accountId);
-      setAccounts((prev) => prev.filter((a) => a.id !== accountId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete account');
-    } finally {
-      setDeleting(null);
-    }
-  }
 
   if (loading) {
     return (
@@ -116,28 +102,16 @@ export default function AccountsPage() {
                     {typeLabels[account.type] || account.type}
                   </span>
                 </div>
-                <div className="flex shrink-0 gap-1">
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    onPress={() =>
-                      navigate(`/binders/${id}/accounts/${account.id}`)
-                    }
-                  >
-                    <PencilIcon width={16} />
-                  </Button>
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    color="danger"
-                    isLoading={deleting === account.id}
-                    onPress={() => handleDelete(account.id)}
-                  >
-                    <TrashIcon width={16} />
-                  </Button>
-                </div>
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  onPress={() =>
+                    navigate(`/binders/${id}/accounts/${account.id}`)
+                  }
+                >
+                  <PencilIcon width={16} />
+                </Button>
               </div>
             );
           })}
