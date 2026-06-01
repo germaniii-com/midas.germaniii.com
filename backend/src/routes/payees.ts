@@ -99,7 +99,7 @@ export async function payeeRoutes(app: FastifyInstance) {
             and(
               eq(payees.binderId, id),
               sql`LOWER(${payees.name}) = LOWER(${name.trim()})`,
-              eq(payees.id, payeeId),
+              sql`${payees.id} != ${payeeId}`,
             ),
           )
           .limit(1);

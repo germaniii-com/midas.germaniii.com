@@ -102,7 +102,7 @@ export async function categoryRoutes(app: FastifyInstance) {
             and(
               eq(categories.binderId, id),
               sql`LOWER(${categories.name}) = LOWER(${name.trim()})`,
-              eq(categories.id, categoryId),
+              sql`${categories.id} != ${categoryId}`,
             ),
           )
           .limit(1);

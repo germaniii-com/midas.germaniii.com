@@ -105,7 +105,7 @@ export async function tagRoutes(app: FastifyInstance) {
             and(
               eq(tags.binderId, id),
               sql`LOWER(${tags.name}) = LOWER(${name.trim()})`,
-              eq(tags.id, tagId),
+              sql`${tags.id} != ${tagId}`,
             ),
           )
           .limit(1);

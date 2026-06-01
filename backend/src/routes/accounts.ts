@@ -166,7 +166,7 @@ export async function accountRoutes(app: FastifyInstance) {
             and(
               eq(accounts.binderId, id),
               sql`LOWER(${accounts.name}) = LOWER(${name.trim()})`,
-              eq(accounts.id, accountId),
+              sql`${accounts.id} != ${accountId}`,
             ),
           )
           .limit(1);
