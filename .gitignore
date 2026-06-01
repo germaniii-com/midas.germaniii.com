@@ -1,0 +1,5 @@
+node_modules/
+dist/
+postgres_data/
+.env
+frontend/t

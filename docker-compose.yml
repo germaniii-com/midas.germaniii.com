@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 1. Database Layer
+  db:
+    image: postgres:16-alpine
+    container_name: budget_postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=budget_user
+      - POSTGRES_PASSWORD=budget_password
+      - POSTGRES_DB=actual_clone_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # 2. Server-First Backend API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DATABASE_URL=postgresql://budget_user:budget_password@db:5432/actual_clone_db
+    depends_on:
+      - db
+    restart: always
+
+  # 3. Frontend Web Client (Static Nginx Delivery)
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: always

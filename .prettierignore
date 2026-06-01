@@ -1,0 +1,4 @@
+node_modules
+dist
+postgres_data
+.git
