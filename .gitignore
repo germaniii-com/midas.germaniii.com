@@ -1,5 +1,6 @@
 node_modules/
 dist/
 postgres_data/
+minio_data/
 .env
 frontend/t

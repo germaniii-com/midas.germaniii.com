@@ -15,7 +15,41 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
     restart: always
 
-  # 2. Server-First Backend API
+  # 2. Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: budget_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - ./minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: always
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: budget_minio_setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb local/budget-files --ignore-existing &&
+      echo 'Bucket budget-files ready'
+      "
+    restart: no
+
+  # 3. Server-First Backend API
   api:
     build:
       context: ./backend
@@ -26,11 +60,18 @@ services:
       - NODE_ENV=production
       - PORT=5000
       - DATABASE_URL=postgresql://budget_user:budget_password@db:5432/actual_clone_db
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=budget-files
+      - MINIO_USE_SSL=false
     depends_on:
       - db
+      - minio-setup
     restart: always
 
-  # 3. Frontend Web Client (Static Nginx Delivery)
+  # 4. Frontend Web Client (Static Nginx Delivery)
   web:
     build:
       context: ./frontend
