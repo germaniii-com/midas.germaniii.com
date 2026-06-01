@@ -81,3 +81,20 @@ export const paymentSchedules = pgTable('payment_schedules', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+export const investments = pgTable('investments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  accountId: uuid('account_id')
+    .notNull()
+    .references(() => accounts.id, { onDelete: 'cascade' }),
+  principalAmount: numeric('principal_amount', { precision: 12, scale: 2 })
+    .notNull()
+    .default('0.00'),
+  interestRate: numeric('interest_rate', { precision: 5, scale: 4 }).notNull(),
+  interestPeriod: varchar('interest_period', { length: 20 }).notNull(),
+  compoundingFrequency: varchar('compounding_frequency', { length: 20 }).notNull(),
+  taxRate: numeric('tax_rate', { precision: 5, scale: 4 }).default('0.0000'),
+  startDate: date('start_date').notNull(),
+  maturityDate: date('maturity_date'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
