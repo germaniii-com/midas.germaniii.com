@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useParams, useLocation, useNavigate, NavLink } from 'react-router-dom';
-import { Button, Input, Select, SelectItem, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react';
+import {
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from '@heroui/react';
 import {
   ArrowLeftOnRectangleIcon,
   SunIcon,
@@ -106,7 +117,7 @@ export default function BinderLayout() {
                 navCollapsed
                   ? `flex items-center justify-center px-0 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-primary/10 text-primary'
+                        ? 'text-primary'
                         : 'text-app-muted hover:text-app-text hover:bg-app-surface'
                     }`
                   : `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
@@ -300,11 +311,7 @@ export default function BinderLayout() {
             <Button variant="light" onPress={() => setEditOpen(false)}>
               Cancel
             </Button>
-            <Button
-              color="primary"
-              isLoading={editSubmitting}
-              onPress={handleEditSave}
-            >
+            <Button color="primary" isLoading={editSubmitting} onPress={handleEditSave}>
               Save
             </Button>
           </ModalFooter>
