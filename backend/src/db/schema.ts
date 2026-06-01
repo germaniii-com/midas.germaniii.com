@@ -25,7 +25,7 @@ export const payees = pgTable('payees', {
   binderId: uuid('binder_id')
     .notNull()
     .references(() => budgetBinders.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 100 }).notNull().unique(),
+  name: varchar('name', { length: 100 }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -90,6 +90,24 @@ export const transactions = pgTable(
       columns: [table.transferId],
       foreignColumns: [table.id],
     }).onDelete('set null'),
+  }),
+);
+
+export const transactionTags = pgTable(
+  'transaction_tags',
+  {
+    binderId: uuid('binder_id')
+      .notNull()
+      .references(() => budgetBinders.id, { onDelete: 'cascade' }),
+    transactionId: uuid('transaction_id')
+      .notNull()
+      .references(() => transactions.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.transactionId, table.tagId] }),
   }),
 );
 

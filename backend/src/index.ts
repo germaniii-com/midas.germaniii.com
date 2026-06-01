@@ -3,6 +3,9 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { binderRoutes } from './routes/binders';
 import { tagRoutes } from './routes/tags';
+import { accountRoutes } from './routes/accounts';
+import { transactionRoutes } from './routes/transactions';
+import { payeeRoutes } from './routes/payees';
 
 const app = Fastify({ logger: true });
 
@@ -14,6 +17,9 @@ async function routes(app: FastifyInstance) {
   });
   app.register(binderRoutes);
   app.register(tagRoutes);
+  app.register(accountRoutes);
+  app.register(transactionRoutes);
+  app.register(payeeRoutes);
 }
 
 app.register(routes, { prefix: '/api' });
