@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Spinner, Tabs, Tab } from '@heroui/react';
-import { PlusIcon, PencilIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { getAccounts, type Account, type CategorySum } from '../../../api/accounts';
 import { typeLabels } from '../../../constants/accountTypes';
 
@@ -81,14 +81,13 @@ export default function AccountsPage() {
     return (
       <div
         key={account.id}
-        className="flex items-center gap-3 rounded-xl border border-app-border bg-app-surface-secondary p-4"
+        className="flex cursor-pointer items-center gap-3 rounded-xl border border-app-border bg-app-surface-secondary p-4 transition-colors hover:bg-app-surface/50"
+        onClick={() => navigate(`/binders/${id}/accounts/${account.id}/transactions`)}
       >
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{account.name}</p>
           <p
-            className={`text-lg font-semibold ${
-              balanceNum >= 0 ? 'text-success' : 'text-danger'
-            }`}
+            className={`text-lg font-semibold ${balanceNum >= 0 ? 'text-success' : 'text-danger'}`}
           >
             {formatBalance(account.balance)}
           </p>
@@ -96,30 +95,15 @@ export default function AccountsPage() {
             {typeLabels[account.type] || account.type}
           </span>
         </div>
-        <div className="flex gap-1">
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            onPress={() =>
-              navigate(
-                `/binders/${id}/accounts/${account.id}/transactions`,
-              )
-            }
-          >
-            <ArrowRightIcon width={16} />
-          </Button>
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            onPress={() =>
-              navigate(`/binders/${id}/accounts/${account.id}`)
-            }
-          >
-            <PencilIcon width={16} />
-          </Button>
-        </div>
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/binders/${id}/accounts/${account.id}/transactions`);
+          }}
+        ></Button>
       </div>
     );
   }
@@ -139,9 +123,7 @@ export default function AccountsPage() {
         <div className="flex items-center gap-3">
           <Tabs
             selectedKey={viewMode}
-            onSelectionChange={(key) =>
-              setViewMode(key as 'index' | 'grouped')
-            }
+            onSelectionChange={(key) => setViewMode(key as 'index' | 'grouped')}
             variant="underlined"
             size="sm"
           >
@@ -163,9 +145,7 @@ export default function AccountsPage() {
       {accounts.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-app-muted text-lg mb-2">No accounts yet</p>
-          <p className="text-app-muted text-sm">
-            Create your first account to start tracking.
-          </p>
+          <p className="text-app-muted text-sm">Create your first account to start tracking.</p>
         </div>
       ) : viewMode === 'grouped' ? (
         <div className="space-y-8">
@@ -173,18 +153,12 @@ export default function AccountsPage() {
             const sum =
               key === '__uncategorized__'
                 ? group.accounts.reduce((acc, a) => acc + parseFloat(a.balance), 0)
-                : parseFloat(
-                    categorySums.find((s) => s.categoryId === key)?.balance ?? '0',
-                  );
+                : parseFloat(categorySums.find((s) => s.categoryId === key)?.balance ?? '0');
             return (
               <div key={key}>
                 <div className="flex items-baseline gap-2 mb-3">
                   <h2 className="text-lg font-semibold">{group.name}</h2>
-                  <span
-                    className={`text-sm ${
-                      sum < 0 ? 'text-danger' : 'text-app-muted'
-                    }`}
-                  >
+                  <span className={`text-sm ${sum < 0 ? 'text-danger' : 'text-app-muted'}`}>
                     {formatBalance(sum.toFixed(2))}
                   </span>
                 </div>

@@ -75,7 +75,7 @@ export default function TransactionsPage() {
                 <th className="px-4 py-3">Account</th>
                 <th className="px-4 py-3">Payee</th>
                 <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3 hidden sm:table-cell" />
               </tr>
             </thead>
             <tbody>
@@ -84,9 +84,13 @@ export default function TransactionsPage() {
                 return (
                   <tr
                     key={tx.id}
-                    className={`border-b border-app-border last:border-b-0 hover:bg-app-surface/50 transition-colors ${
+                    className={`cursor-pointer sm:cursor-auto border-b border-app-border last:border-b-0 transition-colors ${
                       !tx.isCleared ? 'opacity-40' : ''
                     }`}
+                    onClick={(e) => {
+                      if (window.innerWidth >= 640) return;
+                      navigate(`/binders/${id}/transactions/${tx.id}`);
+                    }}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-app-muted">
                       {formatDate(tx.date)}
@@ -103,17 +107,18 @@ export default function TransactionsPage() {
                       {amt >= 0 ? '+' : ''}
                       {formatCurrency(amt)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex gap-1">
-                        <Button
-                          isIconOnly
-                          variant="light"
-                          size="sm"
-                          onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
-                        >
-                          <PencilIcon width={15} />
-                        </Button>
-                      </div>
+                    <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/binders/${id}/transactions/${tx.id}`);
+                        }}
+                      >
+                        <PencilIcon width={15} />
+                      </Button>
                     </td>
                   </tr>
                 );

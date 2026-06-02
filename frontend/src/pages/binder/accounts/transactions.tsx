@@ -63,17 +63,26 @@ export default function AccountTransactionsPage() {
         <h1 className="text-2xl font-bold">
           {account ? account.name : 'Transactions'}
         </h1>
-        <Button
-          color="primary"
-          onPress={() =>
-            navigate(
-              `/binders/${id}/transactions/create?accountId=${accountId}`,
-            )
-          }
-          startContent={<PlusIcon width={18} />}
-        >
-          Add Transaction
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="light"
+            onPress={() => navigate(`/binders/${id}/accounts/${accountId}`)}
+            startContent={<PencilIcon width={16} />}
+          >
+            Edit Account
+          </Button>
+          <Button
+            color="primary"
+            onPress={() =>
+              navigate(
+                `/binders/${id}/transactions/create?accountId=${accountId}`,
+              )
+            }
+            startContent={<PlusIcon width={18} />}
+          >
+            Add Transaction
+          </Button>
+        </div>
       </div>
 
       {error && <p className="text-danger text-sm mb-4">{error}</p>}
@@ -93,7 +102,7 @@ export default function AccountTransactionsPage() {
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Payee</th>
                 <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3 hidden sm:table-cell" />
               </tr>
             </thead>
             <tbody>
@@ -102,9 +111,13 @@ export default function AccountTransactionsPage() {
                 return (
                   <tr
                     key={tx.id}
-                    className={`border-b border-app-border last:border-b-0 hover:bg-app-surface/50 transition-colors ${
+                    className={`cursor-pointer sm:cursor-auto border-b border-app-border last:border-b-0 transition-colors ${
                       !tx.isCleared ? 'opacity-40' : ''
                     }`}
+                    onClick={(e) => {
+                      if (window.innerWidth >= 640) return;
+                      navigate(`/binders/${id}/transactions/${tx.id}`);
+                    }}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-app-muted">
                       {formatDate(tx.date)}
@@ -120,16 +133,15 @@ export default function AccountTransactionsPage() {
                       {amt >= 0 ? '+' : ''}
                       {formatCurrency(amt)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                       <Button
                         isIconOnly
                         variant="light"
                         size="sm"
-                        onPress={() =>
-                          navigate(
-                            `/binders/${id}/transactions/${tx.id}`,
-                          )
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/binders/${id}/transactions/${tx.id}`);
+                        }}
                       >
                         <PencilIcon width={15} />
                       </Button>

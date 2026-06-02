@@ -73,7 +73,7 @@ export default function EditAccountPage() {
         type,
         categoryIds: Array.from(selectedCategoryIds),
       });
-      navigate(`/binders/${id}/accounts`);
+      navigate(transactionsPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update account');
     } finally {
@@ -94,7 +94,7 @@ export default function EditAccountPage() {
     }
   }
 
-  const backPath = `/binders/${id}/accounts`;
+  const transactionsPath = `/binders/${id}/accounts/${accountId}/transactions`;
 
   if (loading) {
     return (
@@ -108,11 +108,11 @@ export default function EditAccountPage() {
     <div className="mx-auto w-full max-w-lg">
       <Button
         variant="light"
-        onPress={() => navigate(backPath)}
+        onPress={() => navigate(transactionsPath)}
         startContent={<ArrowLeftIcon width={18} />}
         className="mb-6"
       >
-        Back to Accounts
+        Back
       </Button>
 
       <h1 className="text-2xl font-bold mb-6">Edit Account</h1>
