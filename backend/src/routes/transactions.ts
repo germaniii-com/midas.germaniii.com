@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db } from '../db';
-import { transactions, accounts, payees, tags, transactionTags } from '../db/schema';
+import { transactions, accounts, payees, tags, transactionTags, accountCategories } from '../db/schema';
 
 interface CreateTransactionBody {
   accountId: string;
@@ -31,14 +31,22 @@ function flipAmount(amount: string): string {
 }
 
 export async function transactionRoutes(app: FastifyInstance) {
-  app.get<{ Params: { id: string }; Querystring: { accountId?: string } }>(
+  app.get<{ Params: { id: string }; Querystring: { accountId?: string; categoryId?: string } }>(
     '/binders/:id/transactions',
     async (req, reply) => {
       const { id } = req.params;
-      const { accountId } = req.query;
+      const { accountId, categoryId } = req.query;
 
       const filters = [eq(transactions.binderId, id)];
       if (accountId) filters.push(eq(transactions.accountId, accountId));
+      if (categoryId) {
+        const catAccountRows = await db
+          .select({ accountId: accountCategories.accountId })
+          .from(accountCategories)
+          .where(eq(accountCategories.categoryId, categoryId));
+        if (catAccountRows.length === 0) return reply.send([]);
+        filters.push(inArray(transactions.accountId, catAccountRows.map((r) => r.accountId)));
+      }
 
       const counterpartTx = alias(transactions, 'counterpart_tx');
       const transferAccount = alias(accounts, 'transfer_account');

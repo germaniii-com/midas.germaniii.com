@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Spinner, Tabs, Tab } from '@heroui/react';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { getAccounts, type Account, type CategorySum } from '../../../api/accounts';
 import { typeLabels } from '../../../constants/accountTypes';
 import { formatCurrency, useBinderCurrency } from '../../../utils/format';
@@ -174,11 +174,27 @@ export default function AccountsPage() {
                 : parseFloat(categorySums.find((s) => s.categoryId === key)?.balance ?? '0');
             return (
               <div key={key}>
-                <div className="flex items-baseline gap-2 mb-3">
-                  <h2 className="text-lg font-semibold">{group.name}</h2>
-                  <span className={`text-sm ${sum < 0 ? 'text-danger' : 'text-app-muted'}`}>
-                    {formatBalance(sum.toFixed(2), currency)}
-                  </span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-lg font-semibold">{group.name}</h2>
+                    <span className={`text-sm ${sum < 0 ? 'text-danger' : 'text-app-muted'}`}>
+                      {formatBalance(sum.toFixed(2), currency)}
+                    </span>
+                  </div>
+                  {key !== '__uncategorized__' && (
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      size="sm"
+                      onPress={() =>
+                        navigate(
+                          `/binders/${id}/transactions?categoryId=${key}&categoryName=${encodeURIComponent(group.name)}`,
+                        )
+                      }
+                    >
+                      <ChevronRightIcon width={18} />
+                    </Button>
+                  )}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {group.accounts.map(renderAccountCard)}

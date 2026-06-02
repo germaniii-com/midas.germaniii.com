@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Spinner } from '@heroui/react';
-import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
 import { formatCurrency, useBinderCurrency } from '../../../utils/format';
@@ -14,6 +14,9 @@ function formatDate(dateStr: string): string {
 export default function TransactionsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const categoryId = searchParams.get('categoryId');
+  const categoryName = searchParams.get('categoryName');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,7 +33,7 @@ export default function TransactionsPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const data = await getTransactions(id);
+      const data = await getTransactions(id, undefined, categoryId ?? undefined);
       setTransactions(data);
       setError('');
     } catch (err) {
@@ -109,7 +112,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     fetchTransactions();
     fetchPayees();
-  }, [id]);
+  }, [id, categoryId]);
 
   if (loading) {
     return (
@@ -121,11 +124,28 @@ export default function TransactionsPage() {
 
   return (
     <div>
+      {categoryId && (
+        <Button
+          variant="light"
+          onPress={() => navigate(`/binders/${id}/accounts`)}
+          startContent={<ArrowLeftIcon width={18} />}
+          className="mb-4"
+        >
+          Back to Accounts
+        </Button>
+      )}
+
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Transactions</h1>
+        <h1 className="text-2xl font-bold">
+          {categoryName ? `Transactions — ${categoryName}` : 'Transactions'}
+        </h1>
         <Button
           color="primary"
-          onPress={() => navigate(`/binders/${id}/transactions/create`)}
+          onPress={() =>
+            navigate(
+              `/binders/${id}/transactions/create${categoryId ? `?categoryId=${categoryId}` : ''}`,
+            )
+          }
           startContent={<PlusIcon width={18} />}
         >
           Add Transaction
