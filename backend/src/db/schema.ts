@@ -4,11 +4,14 @@ import {
   varchar,
   boolean,
   numeric,
+  integer,
+  jsonb,
   timestamp,
   date,
   text,
   primaryKey,
   foreignKey,
+  unique,
 } from 'drizzle-orm/pg-core';
 
 export const budgetBinders = pgTable('budget_binders', {
@@ -143,16 +146,45 @@ export const paymentSchedules = pgTable('payment_schedules', {
   binderId: uuid('binder_id')
     .notNull()
     .references(() => budgetBinders.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
   accountId: uuid('account_id')
     .notNull()
     .references(() => accounts.id, { onDelete: 'cascade' }),
   payeeId: uuid('payee_id').references(() => payees.id, { onDelete: 'set null' }),
   amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
-  frequency: varchar('frequency', { length: 20 }).notNull(),
-  nextDueDate: date('next_due_date').notNull(),
+  repeatInterval: integer('repeat_interval').notNull().default(1),
+  repeatType: varchar('repeat_type', { length: 10 }).notNull(),
+  startDate: date('start_date').notNull(),
+  endType: varchar('end_type', { length: 10 }).notNull().default('never'),
+  endDate: date('end_date'),
+  endOccurrences: integer('end_occurrences'),
+  specificDays: jsonb('specific_days'),
+  weekendAdjustment: varchar('weekend_adjustment', { length: 10 }).notNull().default('none'),
+  notifyBefore: integer('notify_before').notNull().default(7),
+  notifyType: varchar('notify_type', { length: 10 }).default('days'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+export const paymentScheduleOccurrences = pgTable(
+  'payment_schedule_occurrences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    binderId: uuid('binder_id')
+      .notNull()
+      .references(() => budgetBinders.id, { onDelete: 'cascade' }),
+    scheduleId: uuid('schedule_id')
+      .notNull()
+      .references(() => paymentSchedules.id, { onDelete: 'cascade' }),
+    dueDate: date('due_date').notNull(),
+    transactionId: uuid('transaction_id').references(() => transactions.id, { onDelete: 'set null' }),
+    paidAt: timestamp('paid_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    uniqueScheduleDueDate: unique().on(table.scheduleId, table.dueDate),
+  }),
+);
 
 export const investments = pgTable('investments', {
   id: uuid('id').defaultRandom().primaryKey(),

@@ -7,6 +7,7 @@ import { categoryRoutes } from './routes/categories';
 import { accountRoutes } from './routes/accounts';
 import { transactionRoutes } from './routes/transactions';
 import { payeeRoutes } from './routes/payees';
+import { paymentScheduleRoutes } from './routes/payment-schedules';
 
 const app = Fastify({ logger: true });
 
@@ -22,6 +23,7 @@ async function routes(app: FastifyInstance) {
   app.register(accountRoutes);
   app.register(transactionRoutes);
   app.register(payeeRoutes);
+  app.register(paymentScheduleRoutes);
 }
 
 app.register(routes, { prefix: '/api' });

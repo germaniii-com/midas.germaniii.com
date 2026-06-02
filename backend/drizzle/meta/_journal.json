@@ -36,6 +36,13 @@
       "when": 1780307833976,
       "tag": "0004_add_categories_table",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780411343862,
+      "tag": "0005_add_payment_schedule_fields",
+      "breakpoints": true
     }
   ]
 }

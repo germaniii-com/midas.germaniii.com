@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Spinner } from '@heroui/react';
-import { PlusIcon, PencilIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
+import { getUpcomingSchedules, paySchedule, type UpcomingSchedule } from '../../../api/payment-schedules';
 import { formatCurrency, useBinderCurrency } from '../../../utils/format';
 
 function formatDate(dateStr: string): string {
@@ -28,6 +29,30 @@ export default function TransactionsPage() {
   const [editingDateValue, setEditingDateValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const currency = useBinderCurrency();
+  const [upcoming, setUpcoming] = useState<UpcomingSchedule[]>([]);
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  async function fetchUpcoming() {
+    if (!id || categoryId) return;
+    try {
+      const data = await getUpcomingSchedules(id);
+      setUpcoming(data);
+    } catch {}
+  }
+
+  async function handlePaySchedule(scheduleId: string) {
+    if (!id) return;
+    setPayingId(scheduleId);
+    try {
+      await paySchedule(id, scheduleId);
+      setUpcoming((prev) => prev.filter((u) => u.schedule.id !== scheduleId));
+      fetchTransactions();
+    } catch {
+      setError('Failed to pay schedule');
+    } finally {
+      setPayingId(null);
+    }
+  }
 
   const runningBalance = useMemo(
     () => transactions.reduce((sum, tx) => sum + parseFloat(tx.amount), 0),
@@ -117,6 +142,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     fetchTransactions();
     fetchPayees();
+    fetchUpcoming();
   }, [id, categoryId]);
 
   if (loading) {
@@ -167,6 +193,90 @@ export default function TransactionsPage() {
       </div>
 
       {error && <p className="text-danger text-sm mb-4">{error}</p>}
+
+      {upcoming.length > 0 && !categoryId && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-3">Upcoming Payments</h2>
+          <div className="overflow-x-auto rounded-xl border border-app-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-app-border bg-app-surface-secondary text-left text-xs font-medium uppercase text-app-muted">
+                  <th className="px-4 py-3">Due</th>
+                  <th className="px-4 py-3">Schedule</th>
+                  <th className="px-4 py-3">Account</th>
+                  <th className="px-4 py-3">Payee</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {upcoming.map((u) => {
+                  const amt = parseFloat(u.schedule.amount);
+                  const statusColors: Record<string, string> = {
+                    overdue: 'text-danger',
+                    due_soon: 'text-warning',
+                    upcoming: 'text-app-muted',
+                  };
+                  const statusLabels: Record<string, string> = {
+                    overdue: 'Overdue',
+                    due_soon: 'Due soon',
+                    upcoming: 'Upcoming',
+                  };
+                  const daysText = u.occurrence.daysUntilDue < 0
+                    ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
+                    : u.occurrence.daysUntilDue === 0
+                      ? 'Today'
+                      : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
+
+                  return (
+                    <tr
+                      key={u.schedule.id}
+                      className="border-b border-app-border last:border-b-0 transition-colors"
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${statusColors[u.occurrence.status] || ''}`}>
+                            {u.occurrence.dueDate}
+                          </span>
+                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                            ({daysText})
+                          </span>
+                        </div>
+                        <span
+                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                            statusColors[u.occurrence.status] || 'text-app-muted'
+                          }`}
+                        >
+                          {statusLabels[u.occurrence.status] || ''}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap font-medium">{u.schedule.name}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-app-muted">{u.schedule.accountName}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-app-muted">{u.schedule.payeeName || '—'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right font-semibold tabular-nums text-danger">
+                        -{formatCurrency(Math.abs(amt), currency)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Button
+                          size="sm"
+                          color="primary"
+                          variant="flat"
+                          isLoading={payingId === u.schedule.id}
+                          isDisabled={payingId !== null}
+                          onPress={() => handlePaySchedule(u.schedule.id)}
+                          startContent={<CheckIcon width={14} />}
+                        >
+                          Pay
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {transactions.length === 0 ? (
         <div className="text-center py-16">
