@@ -5,10 +5,7 @@ import { PlusIcon, ArrowLeftIcon, PencilIcon } from '@heroicons/react/24/outline
 import { getAccount, type Account } from '../../../api/accounts';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
-
-function formatCurrency(n: number): string {
-  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-}
+import { formatCurrency, useBinderCurrency } from '../../../utils/format';
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -28,6 +25,7 @@ export default function AccountTransactionsPage() {
   const [editingPayeeTxId, setEditingPayeeTxId] = useState<string | null>(null);
   const [editingDateTxId, setEditingDateTxId] = useState<string | null>(null);
   const [editingDateValue, setEditingDateValue] = useState('');
+  const currency = useBinderCurrency();
 
   async function handleSaveAmount(transactionId: string) {
     if (!id) return;
@@ -279,7 +277,7 @@ export default function AccountTransactionsPage() {
                           }}
                         >
                           {amt >= 0 ? '+' : ''}
-                          {formatCurrency(amt)}
+                          {formatCurrency(amt, currency)}
                         </span>
                       )}
                     </td>
