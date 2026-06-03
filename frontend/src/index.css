@@ -7,6 +7,7 @@
   --font-family-sans: "Noto Sans", system-ui, sans-serif;
   --color-surface: #f4f4f5;
   --color-surface-secondary: #ffffff;
+  --color-background: #e4e4e7;
   --color-text: #18181b;
   --color-text-muted: #71717a;
   --color-border: #e4e4e7;
@@ -15,6 +16,7 @@
 .dark {
   --color-surface: #09090b;
   --color-surface-secondary: #18181b;
+  --color-background: #27272a;
   --color-text: #fafafa;
   --color-text-muted: #a1a1aa;
   --color-border: #27272a;
