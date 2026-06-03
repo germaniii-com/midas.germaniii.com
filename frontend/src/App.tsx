@@ -19,6 +19,9 @@ import EditTagPage from "./pages/binder/tags/edit";
 import CategoriesPage from "./pages/binder/categories";
 import CreateCategoryPage from "./pages/binder/categories/create";
 import EditCategoryPage from "./pages/binder/categories/edit";
+import PayeesPage from "./pages/binder/payees";
+import CreatePayeePage from "./pages/binder/payees/create";
+import EditPayeePage from "./pages/binder/payees/edit";
 
 export default function App() {
   return (
@@ -44,6 +47,9 @@ export default function App() {
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="categories/create" element={<CreateCategoryPage />} />
         <Route path="categories/:categoryId" element={<EditCategoryPage />} />
+        <Route path="payees" element={<PayeesPage />} />
+        <Route path="payees/create" element={<CreatePayeePage />} />
+        <Route path="payees/:payeeId" element={<EditPayeePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

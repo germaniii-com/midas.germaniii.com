@@ -6,6 +6,7 @@ import {
   ChartBarIcon,
   TagIcon,
   FolderIcon,
+  BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 
 export interface NavItem {
@@ -21,4 +22,5 @@ export const navItems: NavItem[] = [
   { label: 'Reports', path: 'reports', icon: ChartBarIcon },
   { label: 'Tags', path: 'tags', icon: TagIcon },
   { label: 'Categories', path: 'categories', icon: FolderIcon },
+  { label: 'Payees', path: 'payees', icon: BuildingOfficeIcon },
 ];
