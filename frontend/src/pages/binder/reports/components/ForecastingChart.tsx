@@ -115,7 +115,7 @@ export default function ForecastingChart() {
       </p>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={formatted}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border, #e5e7eb)" />
+          <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} />
           <YAxis
             tick={{ fontSize: 11 }}

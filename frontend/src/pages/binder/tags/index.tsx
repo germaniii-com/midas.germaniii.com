@@ -69,7 +69,7 @@ export default function TagsPage() {
           {tags.map((tag) => (
             <Card
               key={tag.id}
-              className="bg-app-surface-secondary"
+              className="bg-surface-secondary"
               isPressable
               onPress={() => navigate(`/binders/${id}/tags/${tag.id}`)}
             >

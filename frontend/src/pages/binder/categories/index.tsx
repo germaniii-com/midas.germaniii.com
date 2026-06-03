@@ -67,7 +67,7 @@ export default function CategoriesPage() {
           {categories.map((category) => (
             <Card
               key={category.id}
-              className="bg-app-surface-secondary"
+              className="bg-surface-secondary"
               isPressable
               onPress={() => navigate(`/binders/${id}/categories/${category.id}`)}
             >

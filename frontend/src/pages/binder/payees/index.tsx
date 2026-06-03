@@ -67,7 +67,7 @@ export default function PayeesPage() {
           {payees.map((payee) => (
             <Card
               key={payee.id}
-              className="bg-app-surface-secondary"
+              className="bg-surface-secondary"
               isPressable
               onPress={() => navigate(`/binders/${id}/payees/${payee.id}`)}
             >

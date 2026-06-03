@@ -85,7 +85,7 @@ export default function AccountsPage() {
         key={account.id}
         isPressable
         onPress={() => navigate(`/binders/${id}/accounts/${account.id}/transactions`)}
-        className="bg-app-surface-secondary"
+        className="bg-surface-secondary"
       >
         <CardBody className="flex flex-row items-center gap-3">
           <div className="flex-1 min-w-0">
@@ -139,7 +139,7 @@ export default function AccountsPage() {
       {error && <p className="text-danger text-sm mb-4">{error}</p>}
 
       {accounts.length > 0 && (
-        <Card className="mb-4 bg-app-surface-secondary">
+        <Card className="mb-4 bg-surface-secondary">
           <CardBody className="flex flex-row items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">All Accounts</p>

@@ -54,11 +54,10 @@ export default function CashFlowChart() {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={formatted}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border, #e5e7eb)" />
+        <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="label" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => formatCurrency(v, currency, numberLocale)} />
         <Tooltip
-          contentStyle={{ fontSize: 13 }}
           formatter={(value) => formatCurrency(Number(value) || 0, currency, numberLocale)}
         />
         <Legend />

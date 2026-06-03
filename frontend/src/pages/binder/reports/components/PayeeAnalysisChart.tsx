@@ -83,7 +83,7 @@ export default function PayeeAnalysisChart() {
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={formatted} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border, #e5e7eb)" />
+          <CartesianGrid strokeDasharray="3 3" />
           <XAxis type="number" tick={{ fontSize: 12 }} />
           <YAxis type="category" dataKey="payeeName" tick={{ fontSize: 12 }} width={90} />
           <Tooltip
