@@ -6,12 +6,9 @@ import { getAccount, type Account } from '../../../api/accounts';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
 import { formatCurrency, useBinderCurrency } from '../../../utils/format';
+import { formatDate } from '../../../utils/format';
+import { usePreferences } from '../../../hooks/usePreferences';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export default function AccountTransactionsPage() {
   const { id, accountId } = useParams<{ id: string; accountId: string }>();
@@ -27,6 +24,7 @@ export default function AccountTransactionsPage() {
   const [editingDateTxId, setEditingDateTxId] = useState<string | null>(null);
   const [editingDateValue, setEditingDateValue] = useState('');
   const currency = useBinderCurrency();
+  const { dateFormat, numberLocale } = usePreferences();
 
   async function handleSaveAmount(transactionId: string) {
     if (!id) return;
@@ -144,7 +142,7 @@ export default function AccountTransactionsPage() {
                 parseFloat(account.balance) >= 0 ? 'text-success' : 'text-danger'
               }`}
             >
-              {formatCurrency(parseFloat(account.balance), currency)}
+              {formatCurrency(parseFloat(account.balance), currency, numberLocale)}
             </span>
           )}
         </h1>
@@ -221,7 +219,7 @@ export default function AccountTransactionsPage() {
                           setEditingDateValue(tx.date);
                         }}
                       >
-                        {formatDate(tx.date)}
+                        {formatDate(tx.date, dateFormat)}
                       </span>
                     )}
                   </TableCell>
@@ -289,7 +287,7 @@ export default function AccountTransactionsPage() {
                         }}
                       >
                         {amt >= 0 ? '+' : ''}
-                        {formatCurrency(amt, currency)}
+                        {formatCurrency(amt, currency, numberLocale)}
                       </span>
                     )}
                   </TableCell>

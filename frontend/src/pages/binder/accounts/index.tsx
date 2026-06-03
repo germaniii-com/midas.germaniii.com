@@ -6,11 +6,13 @@ import { getAccounts, type Account, type CategorySum } from '../../../api/accoun
 import { typeLabels } from '../../../constants/accountTypes';
 import { getErrorMessage } from '../../../utils/toast';
 import { formatCurrency, useBinderCurrency } from '../../../utils/format';
+import { usePreferences } from '../../../hooks/usePreferences';
+import type { NumberLocale } from '../../../constants/preferences';
 
 const STORAGE_KEY = 'binder_accounts_view_mode';
 
-function formatBalance(balance: string, currency: string): string {
-  return formatCurrency(parseFloat(balance), currency);
+function formatBalance(balance: string, currency: string, locale: NumberLocale = 'en-US'): string {
+  return formatCurrency(parseFloat(balance), currency, locale);
 }
 
 export default function AccountsPage() {
@@ -26,6 +28,7 @@ export default function AccountsPage() {
   });
 
   const currency = useBinderCurrency();
+  const { numberLocale } = usePreferences();
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, viewMode);
@@ -90,7 +93,7 @@ export default function AccountsPage() {
             <p
               className={`text-lg font-semibold ${balanceNum >= 0 ? 'text-success' : 'text-danger'}`}
             >
-              {formatBalance(account.balance, currency)}
+              {formatBalance(account.balance, currency, numberLocale)}
             </p>
             <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               {typeLabels[account.type] || account.type}
@@ -150,6 +153,7 @@ export default function AccountsPage() {
                 {formatBalance(
                   accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0).toFixed(2),
                   currency,
+                  numberLocale,
                 )}
               </p>
             </div>
@@ -175,7 +179,7 @@ export default function AccountsPage() {
                   <div className="flex items-baseline gap-2">
                     <h2 className="text-lg font-semibold">{group.name}</h2>
                     <span className={`text-sm ${sum < 0 ? 'text-danger' : 'text-app-muted'}`}>
-                      {formatBalance(sum.toFixed(2), currency)}
+                      {formatBalance(sum.toFixed(2), currency, numberLocale)}
                     </span>
                   </div>
                   {key !== '__uncategorized__' && (

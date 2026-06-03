@@ -14,14 +14,12 @@ import {
 } from '@heroui/react';
 import {
   ArrowLeftOnRectangleIcon,
-  SunIcon,
-  MoonIcon,
+  Cog6ToothIcon,
   ChevronLeftIcon,
   Bars3Icon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
 import { getBinderById, updateBinder, type Binder } from '../../api/binders';
-import { useTheme } from '../../hooks/useTheme';
 import { currencies } from '../../constants/currencies';
 import { toastSuccess, toastError, getErrorMessage } from '../../utils/toast';
 import { navItems } from '../../constants/navItems';
@@ -30,7 +28,6 @@ export default function BinderLayout() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, toggle } = useTheme();
   const [binder, setBinder] = useState<Binder | null>(null);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(() => {
@@ -189,16 +186,16 @@ export default function BinderLayout() {
           <div className={`flex ${collapsed ? 'flex-col items-center gap-2' : 'flex-col gap-1'}`}>
             <Button
               variant="light"
-              onPress={toggle}
-              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              onPress={() => navigate(`${basePath}/settings`)}
+              aria-label="Settings"
               className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
                 collapsed
                   ? 'justify-center px-0 py-2.5 min-w-0 h-auto'
                   : 'justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto'
               }`}
             >
-              {theme === 'light' ? <MoonIcon width={22} /> : <SunIcon width={22} />}
-              {!collapsed && <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>}
+              <Cog6ToothIcon width={22} />
+              {!collapsed && <span>Settings</span>}
             </Button>
             <Button
               variant="light"
@@ -278,12 +275,12 @@ export default function BinderLayout() {
 
             <Button
               variant="light"
-              onPress={toggle}
-              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              onPress={() => { setDrawerOpen(false); navigate(`${basePath}/settings`); }}
+              aria-label="Settings"
               className="flex flex-col items-center gap-1 py-3 px-2 text-xs font-medium rounded-xl text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface h-auto min-w-0"
             >
-              {theme === 'light' ? <MoonIcon width={22} /> : <SunIcon width={22} />}
-              <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+              <Cog6ToothIcon width={22} />
+              <span>Settings</span>
             </Button>
           </div>
         </div>

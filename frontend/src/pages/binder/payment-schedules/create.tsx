@@ -16,11 +16,14 @@ import { ArrowLeftIcon, PlusIcon, InformationCircleIcon } from '@heroicons/react
 import { getAccounts, type Account } from '../../../api/accounts';
 import { getPayees, createPayee, type Payee } from '../../../api/payees';
 import { createPaymentSchedule, previewScheduleDates } from '../../../api/payment-schedules';
+import { formatDate } from '../../../utils/format';
+import { usePreferences } from '../../../hooks/usePreferences';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
 
 export default function CreatePaymentSchedulePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { dateFormat } = usePreferences();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [payees, setPayees] = useState<Payee[]>([]);
@@ -392,15 +395,11 @@ export default function CreatePaymentSchedulePage() {
               </Tooltip>
             </div>
             <div className="flex flex-wrap gap-2">
-              {previewDates.map((d, i) => {
-                const dt = new Date(d + 'T00:00:00');
-                const formatted = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                return (
-                  <span key={i} className="inline-flex items-center rounded-md bg-app-surface-secondary px-2 py-1 text-xs font-medium tabular-nums">
-                    {formatted}
-                  </span>
-                );
-              })}
+              {previewDates.map((d, i) => (
+                <span key={i} className="inline-flex items-center rounded-md bg-app-surface-secondary px-2 py-1 text-xs font-medium tabular-nums">
+                  {formatDate(d, dateFormat)}
+                </span>
+              ))}
             </div>
           </div>
         )}

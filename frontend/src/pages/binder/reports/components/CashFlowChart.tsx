@@ -13,11 +13,13 @@ import {
 } from 'recharts';
 import { getCashFlow, type CashFlowRow } from '../../../../api/reports';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
+import { usePreferences } from '../../../../hooks/usePreferences';
 
 export default function CashFlowChart() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const currency = useBinderCurrency();
+  const { numberLocale } = usePreferences();
 
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
@@ -54,10 +56,10 @@ export default function CashFlowChart() {
       <BarChart data={formatted}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border, #e5e7eb)" />
         <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => formatCurrency(v, currency)} />
+        <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => formatCurrency(v, currency, numberLocale)} />
         <Tooltip
           contentStyle={{ fontSize: 13 }}
-          formatter={(value) => formatCurrency(Number(value) || 0, currency)}
+          formatter={(value) => formatCurrency(Number(value) || 0, currency, numberLocale)}
         />
         <Legend />
         <Bar dataKey="income" fill="#22c55e" name="Income" radius={[4, 4, 0, 0]} />

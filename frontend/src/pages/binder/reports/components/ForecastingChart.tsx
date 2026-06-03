@@ -17,10 +17,12 @@ import {
 import { getForecast, type ForecastRow } from '../../../../api/reports';
 import { getAccounts, type Account } from '../../../../api/accounts';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
+import { usePreferences } from '../../../../hooks/usePreferences';
 
 export default function ForecastingChart() {
   const { id } = useParams<{ id: string }>();
   const currency = useBinderCurrency();
+  const { numberLocale } = usePreferences();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [baseAccountId, setBaseAccountId] = useState<string>('');
@@ -117,10 +119,10 @@ export default function ForecastingChart() {
           <XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} />
           <YAxis
             tick={{ fontSize: 11 }}
-            tickFormatter={(v: number) => formatCurrency(v, currency)}
+            tickFormatter={(v: number) => formatCurrency(v, currency, numberLocale)}
           />
           <Tooltip
-            formatter={(value) => formatCurrency(Number(value) || 0, currency)}
+            formatter={(value) => formatCurrency(Number(value) || 0, currency, numberLocale)}
           />
           <Legend />
           <Bar dataKey="scheduledOutflow" fill="#f97316" name="Scheduled Outflow" radius={[2, 2, 0, 0]} />

@@ -5,18 +5,15 @@ import { PlusIcon, PencilIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
 import { getUpcomingSchedules, paySchedule, type UpcomingSchedule } from '../../../api/payment-schedules';
-import { formatCurrency, useBinderCurrency } from '../../../utils/format';
+import { formatCurrency, formatDate, useBinderCurrency } from '../../../utils/format';
+import { usePreferences } from '../../../hooks/usePreferences';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export default function TransactionsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { dateFormat, numberLocale } = usePreferences();
   const categoryId = searchParams.get('categoryId');
   const categoryName = searchParams.get('categoryName');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -184,7 +181,7 @@ export default function TransactionsPage() {
                 runningBalance >= 0 ? 'text-success' : 'text-danger'
               }`}
             >
-              {formatCurrency(runningBalance, currency)}
+              {formatCurrency(runningBalance, currency, numberLocale)}
             </span>
           )}
         </h1>
@@ -241,7 +238,7 @@ export default function TransactionsPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className={`font-medium ${statusColors[u.occurrence.status] || ''}`}>
-                          {u.occurrence.dueDate}
+                          {formatDate(u.occurrence.dueDate, dateFormat)}
                         </span>
                         <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
                           ({daysText})
@@ -259,7 +256,7 @@ export default function TransactionsPage() {
                     <TableCell>{u.schedule.accountName}</TableCell>
                     <TableCell>{u.schedule.payeeName || '—'}</TableCell>
                     <TableCell className="text-right font-semibold tabular-nums text-danger">
-                      -{formatCurrency(Math.abs(amt), currency)}
+                      -{formatCurrency(Math.abs(amt), currency, numberLocale)}
                     </TableCell>
                     <TableCell>
                       <Button
@@ -336,7 +333,7 @@ export default function TransactionsPage() {
                           setEditingDateValue(tx.date);
                         }}
                       >
-                        {formatDate(tx.date)}
+                        {formatDate(tx.date, dateFormat)}
                       </span>
                     )}
                   </TableCell>
@@ -408,7 +405,7 @@ export default function TransactionsPage() {
                         }}
                       >
                         {amt >= 0 ? '+' : ''}
-                        {formatCurrency(amt, currency)}
+                        {formatCurrency(amt, currency, numberLocale)}
                       </span>
                     )}
                   </TableCell>

@@ -16,6 +16,8 @@ import {
 import { ArrowLeftIcon, TrashIcon, PlusIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import DeleteConfirmModal from '../../../components/DeleteConfirmModal';
 import { getAccounts, type Account } from '../../../api/accounts';
+import { formatDate } from '../../../utils/format';
+import { usePreferences } from '../../../hooks/usePreferences';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
 import { getPayees, createPayee, type Payee } from '../../../api/payees';
 import {
@@ -28,6 +30,7 @@ import {
 export default function EditPaymentSchedulePage() {
   const { id, scheduleId } = useParams<{ id: string; scheduleId: string }>();
   const navigate = useNavigate();
+  const { dateFormat } = usePreferences();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [payees, setPayees] = useState<Payee[]>([]);
@@ -444,15 +447,11 @@ export default function EditPaymentSchedulePage() {
               </Tooltip>
             </div>
             <div className="flex flex-wrap gap-2">
-              {previewDates.map((d, i) => {
-                const dt = new Date(d + 'T00:00:00');
-                const formatted = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                return (
-                  <span key={i} className="inline-flex items-center rounded-md bg-app-surface-secondary px-2 py-1 text-xs font-medium tabular-nums">
-                    {formatted}
-                  </span>
-                );
-              })}
+              {previewDates.map((d, i) => (
+                <span key={i} className="inline-flex items-center rounded-md bg-app-surface-secondary px-2 py-1 text-xs font-medium tabular-nums">
+                  {formatDate(d, dateFormat)}
+                </span>
+              ))}
             </div>
           </div>
         )}
