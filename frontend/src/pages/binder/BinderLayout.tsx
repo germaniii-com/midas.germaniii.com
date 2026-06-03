@@ -161,23 +161,23 @@ export default function BinderLayout() {
             <ArrowLeftOnRectangleIcon width={18} />
           </Button>
           {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
-                <h2 className="text-sm font-semibold truncate">{binder.name}</h2>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  onPress={() => {
-                    setEditName(binder.name);
-                    setEditCurrency(binder.currency);
-                    setEditOpen(true);
-                  }}
-                  aria-label="Edit binder"
-                  className="min-w-0 h-auto p-1 text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface"
-                >
-                  <PencilIcon width={14} />
-                </Button>
-              </div>
+              <div className="min-w-0 flex-1 group">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-sm font-semibold truncate">{binder.name}</h2>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    onPress={() => {
+                      setEditName(binder.name);
+                      setEditCurrency(binder.currency);
+                      setEditOpen(true);
+                    }}
+                    aria-label="Edit binder"
+                    className="min-w-0 h-auto p-1 text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <PencilIcon width={14} />
+                  </Button>
+                </div>
               <p className="text-xs text-app-muted">{binder.currency}</p>
             </div>
           )}
