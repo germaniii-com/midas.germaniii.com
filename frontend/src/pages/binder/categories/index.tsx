@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, CardBody, Spinner } from '@heroui/react';
-import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { getCategories, type Category } from '../../../api/categories';
 import { getErrorMessage } from '../../../utils/toast';
 
@@ -68,21 +68,13 @@ export default function CategoriesPage() {
             <Card
               key={category.id}
               className="bg-app-surface-secondary"
+              isPressable
+              onPress={() => navigate(`/binders/${id}/categories/${category.id}`)}
             >
               <CardBody className="flex flex-row items-center gap-3">
                 <span className="flex-1 truncate text-sm font-medium">
                   {category.name}
                 </span>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={() =>
-                    navigate(`/binders/${id}/categories/${category.id}`)
-                  }
-                >
-                  <PencilIcon width={16} />
-                </Button>
               </CardBody>
             </Card>
           ))}
