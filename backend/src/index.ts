@@ -1,7 +1,9 @@
 import 'dotenv/config';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import { binderRoutes } from './routes/binders';
+import { binderIORoutes } from './routes/binder-io';
 import { tagRoutes } from './routes/tags';
 import { categoryRoutes } from './routes/categories';
 import { accountRoutes } from './routes/accounts';
@@ -13,12 +15,18 @@ import { reportRoutes } from './routes/reports';
 const app = Fastify({ logger: true });
 
 app.register(cors);
+app.register(multipart, {
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+  },
+});
 
 async function routes(app: FastifyInstance) {
   app.get('/health', async (_req, _reply) => {
     return { status: 'ok' };
   });
   app.register(binderRoutes);
+  app.register(binderIORoutes);
   app.register(tagRoutes);
   app.register(categoryRoutes);
   app.register(accountRoutes);

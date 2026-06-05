@@ -32,11 +32,23 @@ export async function binderRoutes(app: FastifyInstance) {
 
   app.post<{ Body: CreateBinderBody }>('/binders', async (req, reply) => {
     const { name, password, description, currency } = req.body;
+
+    const [existing] = await db
+      .select({ id: budgetBinders.id })
+      .from(budgetBinders)
+      .where(sql`LOWER(${budgetBinders.name}) = LOWER(${name.trim()})`)
+      .limit(1);
+    if (existing) {
+      return reply
+        .status(409)
+        .send({ error: 'A binder with this name already exists' });
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const [binder] = await db
       .insert(budgetBinders)
       .values({
-        name,
+        name: name.trim(),
         passwordHash,
         description: description ?? null,
         currency: currency ?? 'USD',

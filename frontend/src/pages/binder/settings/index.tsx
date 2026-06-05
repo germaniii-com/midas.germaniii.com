@@ -1,14 +1,25 @@
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Select, SelectItem, Button } from '@heroui/react';
-import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import {
+  SunIcon,
+  MoonIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
+} from '@heroicons/react/24/outline';
 import { useTheme } from '../../../hooks/useTheme';
 import { usePreferences } from '../../../hooks/usePreferences';
+import { exportBinder } from '../../../api/binders';
 import {
   NUMBER_LOCALE_OPTIONS,
   DATE_FORMAT_OPTIONS,
   FIRST_DAY_OPTIONS,
 } from '../../../constants/preferences';
+import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
+import BinderImportModal from '../../home/components/BinderImportModal';
 
 export default function SettingsPage() {
+  const { id } = useParams<{ id: string }>();
   const { theme, toggle } = useTheme();
   const {
     numberLocale,
@@ -18,12 +29,58 @@ export default function SettingsPage() {
     setDateFormat,
     setFirstDayOfWeek,
   } = usePreferences();
+  const [exporting, setExporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
+  async function handleExport() {
+    if (!id) return;
+    setExporting(true);
+    try {
+      const blob = await exportBinder(id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `binder-export-${new Date().toISOString().slice(0, 10)}.sql`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toastSuccess('Binder exported successfully');
+    } catch (err) {
+      toastError(getErrorMessage(err, 'Failed to export'));
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
       <div className="flex flex-col gap-4">
+        {/* Export */}
+        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+          <h2 className="text-lg font-semibold mb-1">Export Binder</h2>
+          <p className="text-sm text-app-muted mb-3">Download all binder data as a SQL file</p>
+          <Button
+            startContent={<ArrowDownTrayIcon width={18} />}
+            onPress={handleExport}
+            isLoading={exporting}
+          >
+            Export Binder
+          </Button>
+        </section>
+
+        {/* Import */}
+        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+          <h2 className="text-lg font-semibold mb-1">Import Binder</h2>
+          <p className="text-sm text-app-muted mb-3">Restore a binder from a SQL export file</p>
+          <Button
+            startContent={<ArrowUpTrayIcon width={18} />}
+            onPress={() => setImportOpen(true)}
+          >
+            Import Binder
+          </Button>
+        </section>
+
         {/* Theme */}
         <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">Theme</h2>
@@ -101,6 +158,11 @@ export default function SettingsPage() {
           </Select>
         </section>
       </div>
+
+      <BinderImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
     </div>
   );
 }

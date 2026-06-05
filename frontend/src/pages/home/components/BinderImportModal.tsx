@@ -1,0 +1,170 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Button,
+  Input,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Select,
+  SelectItem,
+} from '@heroui/react';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { importBinder } from '../../../api/binders';
+import { currencies } from '../../../constants/currencies';
+import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
+
+interface BinderImportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function BinderImportModal({ isOpen, onClose }: BinderImportModalProps) {
+  const navigate = useNavigate();
+  const [file, setFile] = useState<File | null>(null);
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [description, setDescription] = useState('');
+  const [currency, setCurrency] = useState('USD');
+  const [showPassword, setShowPassword] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState('');
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setError('');
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const nameMatch = text.match(/^-- Binder: (.+)$/m);
+      if (nameMatch) setName(nameMatch[1].trim());
+      const descMatch = text.match(/^-- Description: (.+)$/m);
+      if (descMatch) setDescription(descMatch[1].trim());
+      const currMatch = text.match(/^-- Currency: (.+)$/m);
+      if (currMatch) setCurrency(currMatch[1].trim());
+    };
+    reader.readAsText(f.slice(0, 1024));
+  }
+
+  async function handleImport() {
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
+    setImporting(true);
+    setError('');
+    try {
+      const binder = await importBinder(file, {
+        name: name || undefined,
+        password,
+        description: description || undefined,
+        currency: currency || undefined,
+      });
+      onClose();
+      toastSuccess('Binder imported successfully');
+      navigate(`/binders/${binder.id}/accounts`);
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Failed to import binder');
+      setError(msg);
+      toastError(msg);
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  function handleClose() {
+    setFile(null);
+    setName('');
+    setPassword('');
+    setDescription('');
+    setCurrency('USD');
+    setShowPassword(false);
+    setError('');
+    setImporting(false);
+    onClose();
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={handleClose} placement="center" size="lg">
+      <ModalContent>
+        <ModalHeader className="justify-center text-lg">Import Binder</ModalHeader>
+        <ModalBody className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-foreground">File</label>
+            <input
+              type="file"
+              accept=".sql"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white file:cursor-pointer cursor-pointer"
+            />
+          </div>
+          <Input
+            label="Name"
+            value={name}
+            onValueChange={(v) => { setName(v); setError(''); }}
+            placeholder="Leave empty to use original name"
+          />
+          <Input
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onValueChange={(v) => { setPassword(v); setError(''); }}
+            isRequired
+            isInvalid={!!error && !!file}
+            errorMessage={!!file ? error : undefined}
+            endContent={
+              <Button
+                isIconOnly
+                variant="light"
+                size="sm"
+                onPress={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="data-[hover=true]:bg-transparent min-w-0 h-auto p-0"
+              >
+                {showPassword ? <EyeSlashIcon width={18} /> : <EyeIcon width={18} />}
+              </Button>
+            }
+          />
+          <Input
+            label="Description"
+            value={description}
+            onValueChange={setDescription}
+            placeholder="Optional description"
+          />
+          <Select
+            label="Currency"
+            selectedKeys={[currency]}
+            onSelectionChange={(keys) => {
+              const val = Array.from(keys)[0];
+              if (val) setCurrency(String(val));
+            }}
+          >
+            {currencies.map((c) => (
+              <SelectItem key={c.value}>{c.label}</SelectItem>
+            ))}
+          </Select>
+          {error && !file && (
+            <p className="text-danger text-sm">{error}</p>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="flat" onPress={handleClose}>
+            Cancel
+          </Button>
+          <Button color="primary" onPress={handleImport} isLoading={importing}>
+            Import
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}

@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, CardBody, Spinner } from '@heroui/react';
-import { PlusIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ArrowUpTrayIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { getBinders, type Binder } from '../../api/binders';
 import { useTheme } from '../../hooks/useTheme';
 import BinderCard from './components/BinderCard';
 import BinderLoginModal from './components/BinderLoginModal';
+import BinderImportModal from './components/BinderImportModal';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [binders, setBinders] = useState<Binder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBinder, setSelectedBinder] = useState<Binder | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const { theme, toggle } = useTheme();
 
   useEffect(() => {
@@ -43,6 +45,12 @@ export default function HomePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card isPressable onPress={() => setImportOpen(true)} className="min-h-[120px]">
+          <CardBody className="flex flex-col items-center justify-center p-5 gap-2">
+            <ArrowUpTrayIcon width={24} className="text-app-muted" />
+            <span className="text-app-muted font-medium">Import Binder</span>
+          </CardBody>
+        </Card>
         <Card isPressable onPress={() => navigate('/create')} className="min-h-[120px]">
           <CardBody className="flex flex-col items-center justify-center p-5 gap-2">
             <PlusIcon width={24} className="text-app-muted" />
@@ -61,6 +69,10 @@ export default function HomePage() {
       <BinderLoginModal
         binder={selectedBinder}
         onClose={() => setSelectedBinder(null)}
+      />
+      <BinderImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
       />
     </div>
   );
