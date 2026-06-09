@@ -1,8 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { eq, and, sql, inArray } from 'drizzle-orm';
+import { eq, and, sql, inArray, count } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db } from '../db';
-import { transactions, accounts, payees, tags, transactionTags, accountCategories } from '../db/schema';
+import { transactions, accounts, payees, tags, transactionTags, accountCategories, transactionAttachments } from '../db/schema';
+import { deleteFile } from '../minio';
 
 interface CreateTransactionBody {
   accountId: string;
@@ -79,6 +80,21 @@ export async function transactionRoutes(app: FastifyInstance) {
       if (rows.length === 0) return reply.send([]);
 
       const txIds = rows.map((r) => r.id);
+
+      const attachmentCountRows = await db
+        .select({
+          transactionId: transactionAttachments.transactionId,
+          count: count(),
+        })
+        .from(transactionAttachments)
+        .where(inArray(transactionAttachments.transactionId, txIds))
+        .groupBy(transactionAttachments.transactionId);
+
+      const attachmentCountByTxId: Record<string, number> = {};
+      for (const acr of attachmentCountRows) {
+        attachmentCountByTxId[acr.transactionId] = acr.count;
+      }
+
       const tagRows = await db
         .select({
           transactionId: transactionTags.transactionId,
@@ -99,6 +115,7 @@ export async function transactionRoutes(app: FastifyInstance) {
       const result = rows.map((r) => ({
         ...r,
         tags: tagsByTxId[r.id] || [],
+        attachmentCount: attachmentCountByTxId[r.id] || 0,
       }));
 
       return reply.send(result);
@@ -221,7 +238,19 @@ export async function transactionRoutes(app: FastifyInstance) {
         .innerJoin(tags, eq(transactionTags.tagId, tags.id))
         .where(eq(transactionTags.transactionId, transactionId));
 
-      return reply.send({ ...tx, tags: tagList });
+      const attachmentList = await db
+        .select({
+          id: transactionAttachments.id,
+          fileName: transactionAttachments.fileName,
+          mimeType: transactionAttachments.mimeType,
+          fileSize: transactionAttachments.fileSize,
+          createdAt: transactionAttachments.createdAt,
+        })
+        .from(transactionAttachments)
+        .where(eq(transactionAttachments.transactionId, transactionId))
+        .orderBy(transactionAttachments.createdAt);
+
+      return reply.send({ ...tx, tags: tagList, attachments: attachmentList });
     },
   );
 
@@ -382,9 +411,22 @@ export async function transactionRoutes(app: FastifyInstance) {
         txIdsToDelete.push(existing.transferId);
       }
 
+      const attachmentRows = await db
+        .select({ objectName: transactionAttachments.objectName })
+        .from(transactionAttachments)
+        .where(inArray(transactionAttachments.transactionId, txIdsToDelete));
+
+      for (const att of attachmentRows) {
+        await deleteFile(att.objectName).catch(() => {});
+      }
+
       await db
         .delete(transactionTags)
         .where(inArray(transactionTags.transactionId, txIdsToDelete));
+
+      await db
+        .delete(transactionAttachments)
+        .where(inArray(transactionAttachments.transactionId, txIdsToDelete));
 
       await db
         .delete(transactions)

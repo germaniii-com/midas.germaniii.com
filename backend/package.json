@@ -18,8 +18,10 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "fastify": "^4.29.1",
+    "minio": "^8.0.7",
     "pg": "^8.21.0",
     "postgres": "^3.4.4",
+    "sharp": "^0.34.5",
     "sql.js": "^1.14.1"
   },
   "devDependencies": {

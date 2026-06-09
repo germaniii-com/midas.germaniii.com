@@ -43,6 +43,13 @@
       "when": 1780411343862,
       "tag": "0005_add_payment_schedule_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780985999289,
+      "tag": "0006_add_transaction_attachments",
+      "breakpoints": true
     }
   ]
 }

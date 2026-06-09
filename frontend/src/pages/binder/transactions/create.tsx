@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Button,
@@ -12,11 +12,12 @@ import {
   ModalBody,
   ModalFooter,
 } from '@heroui/react';
-import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, PlusIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getAccounts, type Account } from '../../../api/accounts';
 import { getPayees, createPayee, type Payee } from '../../../api/payees';
 import { getTags, createTag, type Tag } from '../../../api/tags';
 import { createTransaction } from '../../../api/transactions';
+import { uploadAttachment } from '../../../api/attachments';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
 
 export default function CreateTransactionPage() {
@@ -49,6 +50,10 @@ export default function CreateTransactionPage() {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#3B82F6');
   const [creatingTag, setCreatingTag] = useState(false);
+
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -117,7 +122,7 @@ export default function CreateTransactionPage() {
     setSubmitting(true);
     setError('');
     try {
-      await createTransaction(id, {
+      const tx = await createTransaction(id, {
         accountId,
         amount: isExpense ? String(-amt) : String(amt),
         date,
@@ -127,6 +132,19 @@ export default function CreateTransactionPage() {
         isCleared,
         tagIds: Array.from(selectedTagIds),
       });
+
+      if (pendingFiles.length > 0) {
+        setUploading(true);
+        try {
+          await Promise.all(
+            pendingFiles.map((file) => uploadAttachment(id, tx.id, file)),
+          );
+        } catch {
+          toastError('Transaction created but some attachments failed to upload');
+        }
+        setUploading(false);
+      }
+
       toastSuccess('Transaction created successfully');
       if (backAccountId) {
         navigate(`/binders/${id}/accounts/${backAccountId}/transactions`);
@@ -343,14 +361,57 @@ export default function CreateTransactionPage() {
 
         <Input label="Notes" placeholder="Optional notes" value={notes} onValueChange={setNotes} />
 
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-app-muted">Attachments</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              setPendingFiles((prev) => [...prev, ...files]);
+              e.target.value = '';
+            }}
+            className="hidden"
+          />
+          <Button
+            variant="flat"
+            onPress={() => fileInputRef.current?.click()}
+            startContent={<PhotoIcon width={18} />}
+            className="justify-start"
+          >
+            {pendingFiles.length > 0
+              ? `${pendingFiles.length} file${pendingFiles.length > 1 ? 's' : ''} selected`
+              : 'Add files'}
+          </Button>
+          {pendingFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {pendingFiles.map((file, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 rounded-full bg-default-100 px-3 py-1 text-xs"
+                >
+                  {file.name}
+                  <button
+                    onClick={() => setPendingFiles((prev) => prev.filter((_, j) => j !== i))}
+                    className="ml-0.5 text-default-500 hover:text-danger"
+                  >
+                    <XMarkIcon width={14} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
         <Checkbox isSelected={isCleared} onValueChange={setIsCleared}>
           Cleared
         </Checkbox>
 
         {error && <p className="text-danger text-sm">{error}</p>}
 
-        <Button color="primary" onPress={handleSubmit} isLoading={submitting} className="mt-2">
-          Create Transaction
+        <Button color="primary" onPress={handleSubmit} isLoading={submitting || uploading} className="mt-2">
+          {uploading ? 'Uploading attachments...' : 'Create Transaction'}
         </Button>
       </div>
 

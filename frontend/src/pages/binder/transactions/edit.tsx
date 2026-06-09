@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -13,13 +13,14 @@ import {
   ModalBody,
   ModalFooter,
 } from '@heroui/react';
-import { ArrowLeftIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, TrashIcon, PlusIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import DeleteConfirmModal from '../../../components/DeleteConfirmModal';
 import { getAccounts, type Account } from '../../../api/accounts';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
 import { getPayees, createPayee, type Payee } from '../../../api/payees';
 import { getTags, createTag, type Tag } from '../../../api/tags';
 import { getTransaction, updateTransaction, deleteTransaction } from '../../../api/transactions';
+import { getAttachments, uploadAttachment, deleteAttachment, getAttachmentPreviewUrl, getAttachmentThumbnailUrl, type TransactionAttachment } from '../../../api/attachments';
 
 export default function EditTransactionPage() {
   const { id, transactionId } = useParams<{ id: string; transactionId: string }>();
@@ -54,11 +55,23 @@ export default function EditTransactionPage() {
   const [newTagColor, setNewTagColor] = useState('#3B82F6');
   const [creatingTag, setCreatingTag] = useState(false);
 
+  const [attachments, setAttachments] = useState<TransactionAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewAttachmentId, setPreviewAttachmentId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!id || !transactionId) return;
     setLoading(true);
-    Promise.all([getTransaction(id, transactionId), getAccounts(id), getPayees(id), getTags(id)])
-      .then(([tx, a, p, t]) => {
+    Promise.all([
+      getTransaction(id, transactionId),
+      getAccounts(id),
+      getPayees(id),
+      getTags(id),
+      getAttachments(id, transactionId),
+    ])
+      .then(([tx, a, p, t, atts]) => {
         const amt = parseFloat(tx.amount);
         setIsExpense(amt < 0);
         setAmount(String(Math.abs(amt)));
@@ -72,6 +85,7 @@ export default function EditTransactionPage() {
         setAccounts(a.accounts);
         setPayees(p);
         setTags(t);
+        setAttachments(atts);
       })
       .catch(() => navigate(`/binders/${id}/transactions`))
       .finally(() => setLoading(false));
@@ -107,6 +121,36 @@ export default function EditTransactionPage() {
       setError(getErrorMessage(err, 'Failed to create tag'));
     } finally {
       setCreatingTag(false);
+    }
+  }
+
+  async function handleUploadFiles(files: FileList | null) {
+    if (!id || !transactionId || !files) return;
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(
+        Array.from(files).map((file) => uploadAttachment(id, transactionId, file)),
+      );
+      setAttachments((prev) => [...prev, ...uploaded]);
+      toastSuccess('Files uploaded successfully');
+    } catch (err) {
+      toastError(getErrorMessage(err, 'Failed to upload files'));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDeleteAttachment(attachmentId: string) {
+    if (!id || !transactionId) return;
+    setDeletingAttachmentId(attachmentId);
+    try {
+      await deleteAttachment(id, transactionId, attachmentId);
+      setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+      toastSuccess('Attachment deleted');
+    } catch (err) {
+      toastError(getErrorMessage(err, 'Failed to delete attachment'));
+    } finally {
+      setDeletingAttachmentId(null);
     }
   }
 
@@ -372,6 +416,65 @@ export default function EditTransactionPage() {
 
         <Input label="Notes" placeholder="Optional notes" value={notes} onValueChange={setNotes} />
 
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-app-muted">Attachments</label>
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((att) => {
+              const isImage = att.mimeType?.startsWith('image/');
+              return isImage ? (
+                <div key={att.id} className="relative group">
+                  <img
+                    src={getAttachmentThumbnailUrl(id!, transactionId!, att.id)}
+                    alt={att.fileName}
+                    className="h-16 w-16 cursor-pointer rounded-lg object-cover border border-default-200"
+                    onClick={() => setPreviewAttachmentId(att.id)}
+                  />
+                  <button
+                    onClick={() => handleDeleteAttachment(att.id)}
+                    disabled={deletingAttachmentId === att.id}
+                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
+                  >
+                    <XMarkIcon width={12} />
+                  </button>
+                </div>
+              ) : (
+                <span
+                  key={att.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-default-100 px-3 py-1 text-xs"
+                >
+                  <PhotoIcon width={14} />
+                  {att.fileName}
+                  <button
+                    onClick={() => handleDeleteAttachment(att.id)}
+                    disabled={deletingAttachmentId === att.id}
+                    className="ml-0.5 text-default-500 hover:text-danger disabled:opacity-50"
+                  >
+                    <XMarkIcon width={14} />
+                  </button>
+                </span>
+              );
+            })}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={(e) => handleUploadFiles(e.target.files)}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-dashed border-default-300 bg-default-50 text-default-400 hover:border-primary hover:text-primary disabled:opacity-50"
+            >
+              {uploading ? (
+                <Spinner size="sm" />
+              ) : (
+                <PhotoIcon width={20} />
+              )}
+            </button>
+          </div>
+        </div>
+
         <Checkbox isSelected={isCleared} onValueChange={setIsCleared}>
           Cleared
         </Checkbox>
@@ -460,6 +563,31 @@ export default function EditTransactionPage() {
               Create
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal
+        isOpen={previewAttachmentId !== null}
+        onClose={() => setPreviewAttachmentId(null)}
+        size="4xl"
+        placement="center"
+      >
+        <ModalContent>
+          {previewAttachmentId && (
+            <>
+              <ModalHeader className="pb-2">
+                {attachments.find((a) => a.id === previewAttachmentId)?.fileName}
+              </ModalHeader>
+              <ModalBody className="flex items-center justify-center p-4">
+                <img
+                  src={getAttachmentPreviewUrl(id!, transactionId!, previewAttachmentId)}
+                  alt={attachments.find((a) => a.id === previewAttachmentId)?.fileName || 'Preview'}
+                  className="max-h-[70vh] w-auto rounded-lg object-contain"
+                />
+              </ModalBody>
+            </>
+          )}
         </ModalContent>
       </Modal>
     </div>

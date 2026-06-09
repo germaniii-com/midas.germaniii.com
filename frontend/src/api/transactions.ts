@@ -6,6 +6,14 @@ export interface TransactionTag {
   color: string | null;
 }
 
+export interface TransactionAttachment {
+  id: string;
+  fileName: string;
+  mimeType: string | null;
+  fileSize: number | null;
+  createdAt: string | null;
+}
+
 export interface Transaction {
   id: string;
   binderId: string;
@@ -19,6 +27,8 @@ export interface Transaction {
   isCleared: boolean;
   createdAt: string | null;
   tags: TransactionTag[];
+  attachments?: TransactionAttachment[];
+  attachmentCount?: number;
   transferId: string | null;
   transferAccountId: string | null;
   transferAccountName: string | null;

@@ -186,6 +186,21 @@ export const paymentScheduleOccurrences = pgTable(
   }),
 );
 
+export const transactionAttachments = pgTable('transaction_attachments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  transactionId: uuid('transaction_id')
+    .notNull()
+    .references(() => transactions.id, { onDelete: 'cascade' }),
+  binderId: uuid('binder_id')
+    .notNull()
+    .references(() => budgetBinders.id, { onDelete: 'cascade' }),
+  fileName: varchar('file_name', { length: 255 }).notNull(),
+  objectName: varchar('object_name', { length: 255 }).notNull(),
+  mimeType: varchar('mime_type', { length: 100 }),
+  fileSize: integer('file_size'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
 export const investments = pgTable('investments', {
   id: uuid('id').defaultRandom().primaryKey(),
   binderId: uuid('binder_id')

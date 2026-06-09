@@ -12,6 +12,8 @@ import { transactionRoutes } from './routes/transactions';
 import { payeeRoutes } from './routes/payees';
 import { paymentScheduleRoutes } from './routes/payment-schedules';
 import { reportRoutes } from './routes/reports';
+import { attachmentRoutes } from './routes/attachments';
+import { ensureBucket } from './minio';
 
 const app = Fastify({ logger: true });
 
@@ -36,12 +38,14 @@ async function routes(app: FastifyInstance) {
   app.register(payeeRoutes);
   app.register(paymentScheduleRoutes);
   app.register(reportRoutes);
+  app.register(attachmentRoutes);
 }
 
 app.register(routes, { prefix: '/api' });
 
 const start = async () => {
   try {
+    await ensureBucket();
     await app.listen({ port: Number(process.env.PORT) || 3000, host: '0.0.0.0' });
   } catch (err) {
     app.log.error(err);

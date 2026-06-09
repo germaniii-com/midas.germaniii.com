@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react';
-import { PlusIcon, PencilIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, ArrowLeftIcon, CheckIcon, PaperClipIcon } from '@heroicons/react/24/outline';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
 import { getUpcomingSchedules, paySchedule, type UpcomingSchedule } from '../../../api/payment-schedules';
@@ -351,7 +351,17 @@ export default function TransactionsPage() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium">{tx.accountName}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <span>{tx.accountName}</span>
+                      {tx.attachmentCount && tx.attachmentCount > 0 ? (
+                        <span className="inline-flex items-center gap-0.5 text-xs text-default-400">
+                          <PaperClipIcon width={12} />
+                          {tx.attachmentCount}
+                        </span>
+                      ) : null}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {tx.transferAccountName ? (
                       <span className="inline-flex items-center gap-1">
