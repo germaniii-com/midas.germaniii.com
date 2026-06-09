@@ -1,19 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, CardBody, Spinner, Tabs, Tab } from '@heroui/react';
-import { PlusIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ChevronRightIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { getAccounts, type Account, type CategorySum } from '../../../api/accounts';
 import { typeLabels } from '../../../constants/accountTypes';
 import { getErrorMessage } from '../../../utils/toast';
-import { formatCurrency, useBinderCurrency } from '../../../utils/format';
+import { useBinderCurrency } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
 import type { NumberLocale } from '../../../constants/preferences';
+import { Money } from '../../../components/Money';
 
 const STORAGE_KEY = 'binder_accounts_view_mode';
-
-function formatBalance(balance: string, currency: string, locale: NumberLocale = 'en-US'): string {
-  return formatCurrency(parseFloat(balance), currency, locale);
-}
 
 export default function AccountsPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +25,7 @@ export default function AccountsPage() {
   });
 
   const currency = useBinderCurrency();
-  const { numberLocale } = usePreferences();
+  const { numberLocale, showMoney, setShowMoney } = usePreferences();
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, viewMode);
@@ -93,7 +90,7 @@ export default function AccountsPage() {
             <p
               className={`text-lg font-semibold ${balanceNum >= 0 ? 'text-success' : 'text-danger'}`}
             >
-              {formatBalance(account.balance, currency, numberLocale)}
+              <Money amount={balanceNum} currency={currency} locale={numberLocale} />
             </p>
             <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               {typeLabels[account.type] || account.type}
@@ -117,6 +114,15 @@ export default function AccountsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Accounts</h1>
         <div className="flex items-center gap-3">
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={() => setShowMoney(!showMoney)}
+            aria-label={showMoney ? 'Hide balances' : 'Show balances'}
+            className="text-app-muted"
+          >
+            {showMoney ? <EyeIcon width={20} /> : <EyeSlashIcon width={20} />}
+          </Button>
           <Tabs
             selectedKey={viewMode}
             onSelectionChange={(key) => setViewMode(key as 'index' | 'grouped')}
@@ -150,11 +156,11 @@ export default function AccountsPage() {
                     : 'text-danger'
                 }`}
               >
-                {formatBalance(
-                  accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0).toFixed(2),
-                  currency,
-                  numberLocale,
-                )}
+                <Money
+                  amount={accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0)}
+                  currency={currency}
+                  locale={numberLocale}
+                />
               </p>
             </div>
           </CardBody>
@@ -179,7 +185,7 @@ export default function AccountsPage() {
                   <div className="flex items-baseline gap-2">
                     <h2 className="text-lg font-semibold">{group.name}</h2>
                     <span className={`text-sm ${sum < 0 ? 'text-danger' : 'text-app-muted'}`}>
-                      {formatBalance(sum.toFixed(2), currency, numberLocale)}
+                      <Money amount={sum} currency={currency} locale={numberLocale} />
                     </span>
                   </div>
                   {key !== '__uncategorized__' && (

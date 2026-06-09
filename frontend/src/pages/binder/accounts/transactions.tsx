@@ -6,9 +6,10 @@ import { getAccount, type Account } from '../../../api/accounts';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
 import { getUpcomingSchedules, paySchedule, type UpcomingSchedule } from '../../../api/payment-schedules';
-import { formatCurrency, useBinderCurrency } from '../../../utils/format';
+import { useBinderCurrency } from '../../../utils/format';
 import { formatDate } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
+import { Money } from '../../../components/Money';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
 
 export default function AccountTransactionsPage() {
@@ -193,7 +194,7 @@ export default function AccountTransactionsPage() {
                 parseFloat(account.balance) >= 0 ? 'text-success' : 'text-danger'
               }`}
             >
-              {formatCurrency(parseFloat(account.balance), currency, numberLocale)}
+              <Money amount={parseFloat(account.balance)} currency={currency} locale={numberLocale} />
             </span>
           )}
         </h1>
@@ -271,7 +272,7 @@ export default function AccountTransactionsPage() {
                     <TableCell className="font-medium">{u.schedule.name}</TableCell>
                     <TableCell>{u.schedule.payeeName || '—'}</TableCell>
                     <TableCell className="text-right font-semibold tabular-nums text-danger">
-                      -{formatCurrency(Math.abs(amt), currency, numberLocale)}
+                      -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
                     </TableCell>
                     <TableCell>
                       <Button
@@ -413,7 +414,7 @@ export default function AccountTransactionsPage() {
                             }}
                           >
                             {amt >= 0 ? '+' : ''}
-                            {formatCurrency(amt, currency, numberLocale)}
+                            <Money amount={amt} currency={currency} locale={numberLocale} />
                           </span>
                         )}
                       </TableCell>
@@ -459,7 +460,7 @@ export default function AccountTransactionsPage() {
                       </div>
                       <div className="flex flex-col items-end shrink-0">
                         <span className={`text-sm font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
-                          {amt >= 0 ? '+' : ''}{formatCurrency(amt, currency, numberLocale)}
+                          {amt >= 0 ? '+' : ''}<Money amount={amt} currency={currency} locale={numberLocale} />
                         </span>
                         {tx.attachmentCount && tx.attachmentCount > 0 ? (
                           <span className="inline-flex items-center gap-0.5 text-xs text-default-400 mt-0.5">

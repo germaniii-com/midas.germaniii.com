@@ -18,7 +18,10 @@ import {
   ChevronLeftIcon,
   Bars3Icon,
   PencilIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from '@heroicons/react/24/outline';
+import { usePreferences } from '../../hooks/usePreferences';
 import { getBinderById, updateBinder, type Binder } from '../../api/binders';
 import { currencies } from '../../constants/currencies';
 import { toastSuccess, toastError, getErrorMessage } from '../../utils/toast';
@@ -34,6 +37,7 @@ export default function BinderLayout() {
     return localStorage.getItem('binder_sidebar_collapsed') === 'true';
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { showMoney, setShowMoney } = usePreferences();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState('');
@@ -184,6 +188,19 @@ export default function BinderLayout() {
         </nav>
         <div className="p-3">
           <div className={`flex ${collapsed ? 'flex-col items-center gap-2' : 'flex-col gap-1'}`}>
+            <Button
+              variant="light"
+              onPress={() => setShowMoney(!showMoney)}
+              aria-label={showMoney ? 'Hide balances' : 'Show balances'}
+              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
+                collapsed
+                  ? 'justify-center px-0 py-2.5 min-w-0 h-auto'
+                  : 'justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto'
+              }`}
+            >
+              {showMoney ? <EyeIcon width={22} /> : <EyeSlashIcon width={22} />}
+              {!collapsed && <span>{showMoney ? 'Hide Balances' : 'Show Balances'}</span>}
+            </Button>
             <Button
               variant="light"
               onPress={() => navigate(`${basePath}/settings`)}

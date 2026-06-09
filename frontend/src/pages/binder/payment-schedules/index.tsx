@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Spinner, Checkbox, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react';
 import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { getPaymentSchedules, type PaymentSchedule } from '../../../api/payment-schedules';
-import { formatCurrency, formatDate, useBinderCurrency } from '../../../utils/format';
+import { formatDate, useBinderCurrency } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
+import { Money } from '../../../components/Money';
 import { getErrorMessage } from '../../../utils/toast';
 
 export default function PaymentSchedulesPage() {
@@ -107,7 +108,7 @@ export default function PaymentSchedulesPage() {
                   <TableCell>{s.accountName}</TableCell>
                   <TableCell className={`text-right font-semibold tabular-nums ${isExpense ? 'text-danger' : 'text-success'}`}>
                     {isExpense ? '-' : '+'}
-                    {formatCurrency(absAmt, currency, numberLocale)}
+                    <Money amount={absAmt} currency={currency} locale={numberLocale} />
                   </TableCell>
                   <TableCell className="text-xs">
                     <div>{repeatLabel}</div>

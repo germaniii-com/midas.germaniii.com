@@ -9,12 +9,14 @@ export interface Preferences {
   numberLocale: NumberLocale;
   dateFormat: DateFormat;
   firstDayOfWeek: FirstDayOfWeek;
+  showMoney: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
   numberLocale: 'en-US',
   dateFormat: 'MM/DD/YYYY',
   firstDayOfWeek: 0,
+  showMoney: true,
 };
 
 export const NUMBER_LOCALE_OPTIONS: { value: NumberLocale; label: string; example: string }[] = [
