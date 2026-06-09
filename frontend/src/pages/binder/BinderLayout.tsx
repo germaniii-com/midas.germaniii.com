@@ -246,7 +246,7 @@ export default function BinderLayout() {
       </div>
 
       {drawerOpen && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 shadow-xl safe-bottom">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 shadow-xl rounded-t-2xl safe-bottom">
           <div className="flex justify-center pt-2 pb-1">
             <div className="w-10 h-1 bg-app-muted/40 rounded-full" />
           </div>
