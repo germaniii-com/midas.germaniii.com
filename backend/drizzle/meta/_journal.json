@@ -50,6 +50,13 @@
       "when": 1780985999289,
       "tag": "0006_add_transaction_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781100000000,
+      "tag": "0007_add_users_table",
+      "breakpoints": true
     }
   ]
 }

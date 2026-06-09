@@ -13,6 +13,8 @@ import { payeeRoutes } from './routes/payees';
 import { paymentScheduleRoutes } from './routes/payment-schedules';
 import { reportRoutes } from './routes/reports';
 import { attachmentRoutes } from './routes/attachments';
+import { authRoutes } from './routes/auth';
+import { authenticate } from './middleware/auth';
 import { ensureBucket } from './minio';
 
 const app = Fastify({ logger: true });
@@ -24,24 +26,36 @@ app.register(multipart, {
   },
 });
 
-async function routes(app: FastifyInstance) {
-  app.get('/health', async (_req, _reply) => {
-    return { status: 'ok' };
-  });
-  app.register(binderRoutes);
-  app.register(binderIORoutes);
-  app.register(actualImportRoutes);
-  app.register(tagRoutes);
-  app.register(categoryRoutes);
-  app.register(accountRoutes);
-  app.register(transactionRoutes);
-  app.register(payeeRoutes);
-  app.register(paymentScheduleRoutes);
-  app.register(reportRoutes);
-  app.register(attachmentRoutes);
-}
+// Public routes (no auth required)
+app.register(
+  async function publicRoutes(instance: FastifyInstance) {
+    instance.get('/health', async (_req, _reply) => {
+      return { status: 'ok' };
+    });
+    instance.register(authRoutes);
+  },
+  { prefix: '/api' },
+);
 
-app.register(routes, { prefix: '/api' });
+// Protected routes (auth required)
+app.register(
+  async function protectedRoutes(instance: FastifyInstance) {
+    instance.addHook('preHandler', authenticate);
+
+    instance.register(binderRoutes);
+    instance.register(binderIORoutes);
+    instance.register(actualImportRoutes);
+    instance.register(tagRoutes);
+    instance.register(categoryRoutes);
+    instance.register(accountRoutes);
+    instance.register(transactionRoutes);
+    instance.register(payeeRoutes);
+    instance.register(paymentScheduleRoutes);
+    instance.register(reportRoutes);
+    instance.register(attachmentRoutes);
+  },
+  { prefix: '/api' },
+);
 
 const start = async () => {
   try {

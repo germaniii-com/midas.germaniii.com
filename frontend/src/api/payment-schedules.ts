@@ -1,4 +1,4 @@
-import { API_URL } from '.';
+import { API_URL, fetchWithAuth } from '.';
 
 export interface PaymentSchedule {
   id: string;
@@ -96,7 +96,7 @@ export interface UpdatePaymentScheduleData {
 }
 
 export async function getPaymentSchedules(binderId: string): Promise<PaymentSchedule[]> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payment-schedules`);
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/payment-schedules`);
   if (!res.ok) throw new Error('Failed to fetch payment schedules');
   return res.json();
 }
@@ -105,7 +105,7 @@ export async function getPaymentSchedule(
   binderId: string,
   scheduleId: string,
 ): Promise<PaymentSchedule> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${API_URL}/api/binders/${binderId}/payment-schedules/${scheduleId}`,
   );
   if (!res.ok) throw new Error('Payment schedule not found');
@@ -137,7 +137,7 @@ export async function previewScheduleDates(
   if (params.endDate) qs.set('endDate', params.endDate);
   if (params.endOccurrences) qs.set('endOccurrences', String(params.endOccurrences));
   if (params.specificDays && params.specificDays.length > 0) qs.set('specificDays', params.specificDays.join(','));
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payment-schedules/preview?${qs}`);
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/payment-schedules/preview?${qs}`);
   if (!res.ok) throw new Error('Failed to preview dates');
   return res.json();
 }
@@ -146,7 +146,7 @@ export async function createPaymentSchedule(
   binderId: string,
   data: CreatePaymentScheduleData,
 ): Promise<PaymentSchedule> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${API_URL}/api/binders/${binderId}/payment-schedules/create`,
     {
       method: 'POST',
@@ -166,7 +166,7 @@ export async function updatePaymentSchedule(
   scheduleId: string,
   data: UpdatePaymentScheduleData,
 ): Promise<PaymentSchedule> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${API_URL}/api/binders/${binderId}/payment-schedules/${scheduleId}`,
     {
       method: 'PUT',
@@ -185,7 +185,7 @@ export async function deletePaymentSchedule(
   binderId: string,
   scheduleId: string,
 ): Promise<void> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${API_URL}/api/binders/${binderId}/payment-schedules/${scheduleId}`,
     { method: 'DELETE' },
   );
@@ -197,7 +197,7 @@ export async function paySchedule(
   scheduleId: string,
   isExpense?: boolean,
 ): Promise<PayResult> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${API_URL}/api/binders/${binderId}/payment-schedules/${scheduleId}/pay`,
     {
       method: 'POST',
@@ -213,7 +213,7 @@ export async function paySchedule(
 }
 
 export async function getUpcomingSchedules(binderId: string): Promise<UpcomingSchedule[]> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payment-schedules/upcoming`);
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/payment-schedules/upcoming`);
   if (!res.ok) throw new Error('Failed to fetch upcoming schedules');
   return res.json();
 }

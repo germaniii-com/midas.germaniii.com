@@ -9,7 +9,6 @@ import { currencies } from '../../constants/currencies';
 export default function CreateBinder() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
@@ -20,16 +19,11 @@ export default function CreateBinder() {
       setError('Name is required');
       return;
     }
-    if (!password.trim()) {
-      setError('Password is required');
-      return;
-    }
     setSubmitting(true);
     setError('');
     try {
       await createBinder({
         name: name.trim(),
-        password,
         currency: currency || 'USD',
         description: description.trim() || undefined,
       });
@@ -70,18 +64,6 @@ export default function CreateBinder() {
           }}
           isRequired
           isInvalid={!!error && !name.trim()}
-        />
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Choose a password"
-          value={password}
-          onValueChange={(v) => {
-            setPassword(v);
-            setError('');
-          }}
-          isRequired
-          isInvalid={!!error && !password.trim()}
         />
         <Select
           label="Currency"

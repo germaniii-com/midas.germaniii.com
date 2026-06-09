@@ -14,12 +14,14 @@ import {
 } from '@heroui/react';
 import {
   ArrowLeftOnRectangleIcon,
+  ArrowRightOnRectangleIcon,
   Cog6ToothIcon,
   ChevronLeftIcon,
   Bars3Icon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
 import { getBinderById, updateBinder, type Binder } from '../../api/binders';
+import { useAuth } from '../../hooks/useAuth';
 import { currencies } from '../../constants/currencies';
 import { toastSuccess, toastError, getErrorMessage } from '../../utils/toast';
 import { navItems } from '../../constants/navItems';
@@ -28,6 +30,7 @@ export default function BinderLayout() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [binder, setBinder] = useState<Binder | null>(null);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(() => {
@@ -199,6 +202,19 @@ export default function BinderLayout() {
             </Button>
             <Button
               variant="light"
+              onPress={() => { logout(); navigate('/'); }}
+              aria-label="Sign out"
+              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
+                collapsed
+                  ? 'justify-center px-0 py-2.5 min-w-0 h-auto'
+                  : 'justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto'
+              }`}
+            >
+              <ArrowRightOnRectangleIcon width={22} />
+              {!collapsed && <span>Sign Out</span>}
+            </Button>
+            <Button
+              variant="light"
               onPress={() => setCollapsed(!collapsed)}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
@@ -281,6 +297,15 @@ export default function BinderLayout() {
             >
               <Cog6ToothIcon width={22} />
               <span>Settings</span>
+            </Button>
+            <Button
+              variant="light"
+              onPress={() => { logout(); navigate('/'); }}
+              aria-label="Sign out"
+              className="flex flex-col items-center gap-1 py-3 px-2 text-xs font-medium rounded-xl text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface h-auto min-w-0"
+            >
+              <ArrowRightOnRectangleIcon width={22} />
+              <span>Sign Out</span>
             </Button>
           </div>
         </div>

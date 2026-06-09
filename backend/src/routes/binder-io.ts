@@ -1,8 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import type { Multipart } from '@fastify/multipart';
-import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db, pool } from '../db';
 import { budgetBinders } from '../db/schema';
 
@@ -98,6 +97,7 @@ function wrapUuid(uuid: string): string {
 export async function binderIORoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>('/binders/:id/export', async (req, reply) => {
     const { id } = req.params;
+    const user = (req as any).user as { id: string };
 
     const [binder] = await db
       .select({
@@ -107,7 +107,7 @@ export async function binderIORoutes(app: FastifyInstance) {
         createdAt: budgetBinders.createdAt,
       })
       .from(budgetBinders)
-      .where(eq(budgetBinders.id, id));
+      .where(and(eq(budgetBinders.id, id), eq(budgetBinders.userId, user.id)));
 
     if (!binder) {
       return reply.status(404).send({ error: 'Binder not found' });
@@ -203,7 +203,7 @@ export async function binderIORoutes(app: FastifyInstance) {
     lines.push(`-- Binder: ${binder.name}`);
     lines.push(`-- Description: ${binder.description ?? ''}`);
     lines.push(`-- Currency: ${binder.currency}`);
-    lines.push('-- Schema Version: 6');
+    lines.push('-- Schema Version: 7');
     lines.push(
       `-- Records: accounts=${accountsRows.length}, categories=${categoriesRows.length}, tags=${tagsRows.length}, payees=${payeesRows.length}, transactions=${allTxRows.length}, transaction_tags=${transactionTagsRows.length}, account_tags=${accountTagsRows.length}, account_categories=${accountCategoriesRows.length}, payment_schedules=${paymentSchedulesRows.length}, payment_schedule_occurrences=${psoRows.length}, investments=${investmentsRows.length}`,
     );
@@ -278,6 +278,7 @@ export async function binderIORoutes(app: FastifyInstance) {
   });
 
   app.post('/binders/import', async (req, reply) => {
+    const user = (req as any).user as { id: string };
     const data = await req.file();
 
     if (!data) {
@@ -294,14 +295,9 @@ export async function binderIORoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: 'Empty file' });
     }
 
-    const password = getFieldValue(data.fields.password).trim();
     const nameOverride = getFieldValue(data.fields.name).trim();
     const descriptionOverride = getFieldValue(data.fields.description).trim();
     const currencyOverride = getFieldValue(data.fields.currency).trim();
-
-    if (!password) {
-      return reply.status(400).send({ error: 'Password is required' });
-    }
 
     const headerName = sqlContent.match(/^-- Binder: (.+)$/m)?.[1]?.trim();
     const headerDescription = sqlContent.match(/^-- Description: (.+)$/m)?.[1]?.trim();
@@ -320,7 +316,6 @@ export async function binderIORoutes(app: FastifyInstance) {
     const finalName = existing ? `${newName} (Imported)` : newName;
 
     const newBinderId = crypto.randomUUID();
-    const passwordHash = await bcrypt.hash(password, 10);
 
     const sqlLines = sqlContent.split('\n').filter((l) => !l.trim().startsWith('--'));
 
@@ -400,8 +395,8 @@ export async function binderIORoutes(app: FastifyInstance) {
     const fullSql = [
       'BEGIN;',
       '',
-      `INSERT INTO budget_binders (id, name, description, currency, password_hash, created_at)`,
-      `VALUES (${fmt(newBinderId)}, ${fmt(finalName)}, ${fmt(newDescription)}, ${fmt(newCurrency)}, ${fmt(passwordHash)}, NOW());`,
+      `INSERT INTO budget_binders (id, user_id, name, description, currency, created_at)`,
+      `VALUES (${fmt(newBinderId)}, ${fmt(user.id)}, ${fmt(finalName)}, ${fmt(newDescription)}, ${fmt(newCurrency)}, NOW());`,
       '',
       ...rewrittenStmts,
       '',

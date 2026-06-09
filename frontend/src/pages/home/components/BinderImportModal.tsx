@@ -11,7 +11,6 @@ import {
   Select,
   SelectItem,
 } from '@heroui/react';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { importBinder, importActualBinder } from '../../../api/binders';
 import { currencies } from '../../../constants/currencies';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
@@ -33,10 +32,8 @@ export default function BinderImportModal({ isOpen, onClose }: BinderImportModal
   const [importType, setImportType] = useState<ImportType>('native');
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const [showPassword, setShowPassword] = useState(false);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState('');
 
@@ -71,17 +68,12 @@ export default function BinderImportModal({ isOpen, onClose }: BinderImportModal
       setError('Please select a file');
       return;
     }
-    if (!password) {
-      setError('Password is required');
-      return;
-    }
     setImporting(true);
     setError('');
     try {
       const fn = importType === 'actual' ? importActualBinder : importBinder;
       const binder = await fn(file, {
         name: name || undefined,
-        password,
         description: description || undefined,
         currency: currency || undefined,
       });
@@ -100,10 +92,8 @@ export default function BinderImportModal({ isOpen, onClose }: BinderImportModal
   function handleClose() {
     setFile(null);
     setName('');
-    setPassword('');
     setDescription('');
     setCurrency('USD');
-    setShowPassword(false);
     setError('');
     setImporting(false);
     setImportType('native');
@@ -152,27 +142,6 @@ export default function BinderImportModal({ isOpen, onClose }: BinderImportModal
             value={name}
             onValueChange={(v) => { setName(v); setError(''); }}
             placeholder="Leave empty to use original name"
-          />
-          <Input
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onValueChange={(v) => { setPassword(v); setError(''); }}
-            isRequired
-            isInvalid={!!error && !!file}
-            errorMessage={!!file ? error : undefined}
-            endContent={
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="data-[hover=true]:bg-transparent min-w-0 h-auto p-0"
-              >
-                {showPassword ? <EyeSlashIcon width={18} /> : <EyeIcon width={18} />}
-              </Button>
-            }
           />
           <Input
             label="Description"

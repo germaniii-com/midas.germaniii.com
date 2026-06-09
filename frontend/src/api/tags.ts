@@ -1,4 +1,4 @@
-import { API_URL } from '.';
+import { API_URL, fetchWithAuth } from '.';
 
 export interface Tag {
   id: string;
@@ -19,7 +19,7 @@ export interface UpdateTagData {
 }
 
 export async function getTags(binderId: string): Promise<Tag[]> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/tags`);
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/tags`);
   if (!res.ok) throw new Error('Failed to fetch tags');
   return res.json();
 }
@@ -28,7 +28,7 @@ export async function getTag(
   binderId: string,
   tagId: string,
 ): Promise<Tag> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/tags/${tagId}`);
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/tags/${tagId}`);
   if (!res.ok) throw new Error('Tag not found');
   return res.json();
 }
@@ -37,7 +37,7 @@ export async function createTag(
   binderId: string,
   data: CreateTagData,
 ): Promise<Tag> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/tags/create`, {
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/tags/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -54,7 +54,7 @@ export async function updateTag(
   tagId: string,
   data: UpdateTagData,
 ): Promise<Tag> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/tags/${tagId}`, {
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/tags/${tagId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -70,7 +70,7 @@ export async function deleteTag(
   binderId: string,
   tagId: string,
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/tags/${tagId}`, {
+  const res = await fetchWithAuth(`${API_URL}/api/binders/${binderId}/tags/${tagId}`, {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Failed to delete tag');

@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify';
 import type { Multipart } from '@fastify/multipart';
-import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 import initSqlJs from 'sql.js';
 import { eq, sql } from 'drizzle-orm';
@@ -64,6 +63,7 @@ function toRows(result: { columns: string[]; values: unknown[][] }[]): Record<st
 
 export async function actualImportRoutes(app: FastifyInstance) {
   app.post('/binders/import-actual', async (req, reply) => {
+    const user = (req as any).user as { id: string };
     const data = await req.file();
 
     if (!data) {
@@ -76,13 +76,8 @@ export async function actualImportRoutes(app: FastifyInstance) {
     }
     const fileBuffer = Buffer.concat(chunks);
 
-    const password = getFieldValue(data.fields.password).trim();
     const nameOverride = getFieldValue(data.fields.name).trim();
     const currencyOverride = getFieldValue(data.fields.currency).trim();
-
-    if (!password) {
-      return reply.status(400).send({ error: 'Password is required' });
-    }
 
     const SQL = await initSqlJs();
     const sqliteDb = new SQL.Database(new Uint8Array(fileBuffer));
@@ -149,7 +144,6 @@ export async function actualImportRoutes(app: FastifyInstance) {
 
     const finalName = existing ? `${budgetName} (Imported)` : budgetName;
     const newBinderId = crypto.randomUUID();
-    const passwordHash = await bcrypt.hash(password, 10);
     const newCurrency = currencyOverride || 'USD';
 
     const accountIdMap = new Map<string, string>();
@@ -186,10 +180,10 @@ export async function actualImportRoutes(app: FastifyInstance) {
     lines.push('');
 
     lines.push(
-      `INSERT INTO budget_binders (id, name, description, currency, password_hash, created_at)`,
+      `INSERT INTO budget_binders (id, user_id, name, description, currency, created_at)`,
     );
     lines.push(
-      `VALUES (${fmt(newBinderId)}, ${fmt(finalName)}, NULL, ${fmt(newCurrency)}, ${fmt(passwordHash)}, NOW());`,
+      `VALUES (${fmt(newBinderId)}, ${fmt(user.id)}, ${fmt(finalName)}, NULL, ${fmt(newCurrency)}, NOW());`,
     );
     lines.push('');
 

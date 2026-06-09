@@ -1,5 +1,4 @@
 import { Card, CardBody } from '@heroui/react';
-import { LockClosedIcon } from '@heroicons/react/24/outline';
 import type { Binder } from '../../../api/binders';
 
 interface BinderCardProps {
@@ -12,7 +11,6 @@ export default function BinderCard({ binder, onPress }: BinderCardProps) {
     <Card isPressable onPress={onPress} className="min-h-[120px]">
       <CardBody className="flex flex-col justify-center p-5">
         <div className="flex items-center gap-2 mb-1">
-          <LockClosedIcon width={16} className="text-app-muted shrink-0" />
           <span className="font-semibold text-base">{binder.name}</span>
         </div>
         {binder.description && (

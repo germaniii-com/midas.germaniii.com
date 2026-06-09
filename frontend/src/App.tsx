@@ -1,6 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./hooks/useAuth";
+import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/home";
 import CreateBinder from "./pages/create-binder";
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
 import BinderLayout from "./pages/binder/BinderLayout";
 import AccountsPage from "./pages/binder/accounts";
 import CreateAccountPage from "./pages/binder/accounts/create";
@@ -26,34 +30,52 @@ import SettingsPage from "./pages/binder/settings";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/create" element={<CreateBinder />} />
-      <Route path="/binders/:id" element={<BinderLayout />}>
-        <Route index element={<Navigate to="accounts" replace />} />
-        <Route path="accounts" element={<AccountsPage />} />
-        <Route path="accounts/create" element={<CreateAccountPage />} />
-        <Route path="accounts/:accountId" element={<EditAccountPage />} />
-        <Route path="accounts/:accountId/transactions" element={<AccountTransactionsPage />} />
-        <Route path="transactions" element={<TransactionsPage />} />
-        <Route path="transactions/create" element={<CreateTransactionPage />} />
-        <Route path="transactions/:transactionId" element={<EditTransactionPage />} />
-        <Route path="payment-schedules" element={<PaymentSchedulesPage />} />
-        <Route path="payment-schedules/create" element={<CreatePaymentSchedulePage />} />
-        <Route path="payment-schedules/:scheduleId" element={<EditPaymentSchedulePage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="tags" element={<TagsPage />} />
-        <Route path="tags/create" element={<CreateTagPage />} />
-        <Route path="tags/:tagId" element={<EditTagPage />} />
-        <Route path="categories" element={<CategoriesPage />} />
-        <Route path="categories/create" element={<CreateCategoryPage />} />
-        <Route path="categories/:categoryId" element={<EditCategoryPage />} />
-        <Route path="payees" element={<PayeesPage />} />
-        <Route path="payees/create" element={<CreatePayeePage />} />
-        <Route path="payees/:payeeId" element={<EditPayeePage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/create"
+          element={
+            <ProtectedRoute>
+              <CreateBinder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/binders/:id"
+          element={
+            <ProtectedRoute>
+              <BinderLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="accounts" replace />} />
+          <Route path="accounts" element={<AccountsPage />} />
+          <Route path="accounts/create" element={<CreateAccountPage />} />
+          <Route path="accounts/:accountId" element={<EditAccountPage />} />
+          <Route path="accounts/:accountId/transactions" element={<AccountTransactionsPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="transactions/create" element={<CreateTransactionPage />} />
+          <Route path="transactions/:transactionId" element={<EditTransactionPage />} />
+          <Route path="payment-schedules" element={<PaymentSchedulesPage />} />
+          <Route path="payment-schedules/create" element={<CreatePaymentSchedulePage />} />
+          <Route path="payment-schedules/:scheduleId" element={<EditPaymentSchedulePage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="tags" element={<TagsPage />} />
+          <Route path="tags/create" element={<CreateTagPage />} />
+          <Route path="tags/:tagId" element={<EditTagPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="categories/create" element={<CreateCategoryPage />} />
+          <Route path="categories/:categoryId" element={<EditCategoryPage />} />
+          <Route path="payees" element={<PayeesPage />} />
+          <Route path="payees/create" element={<CreatePayeePage />} />
+          <Route path="payees/:payeeId" element={<EditPayeePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
