@@ -1,10 +1,31 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Card, CardBody, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react';
-import { PlusIcon, PencilIcon, ArrowLeftIcon, CheckIcon, PaperClipIcon } from '@heroicons/react/24/outline';
+import {
+  Button,
+  Card,
+  CardBody,
+  Spinner,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@heroui/react';
+import {
+  PlusIcon,
+  PencilIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  PaperClipIcon,
+} from '@heroicons/react/24/outline';
 import { getTransactions, updateTransaction, type Transaction } from '../../../api/transactions';
 import { getPayees, type Payee } from '../../../api/payees';
-import { getUpcomingSchedules, paySchedule, type UpcomingSchedule } from '../../../api/payment-schedules';
+import {
+  getUpcomingSchedules,
+  paySchedule,
+  type UpcomingSchedule,
+} from '../../../api/payment-schedules';
 import { getAccounts, type Account } from '../../../api/accounts';
 import { formatDate, useBinderCurrency } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
@@ -44,7 +65,9 @@ export default function TransactionsPage() {
       ]);
       if (categoryId && accts) {
         const accountIds = new Set(
-          accts.accounts.filter((a) => a.categories.some((c) => c.id === categoryId)).map((a) => a.id),
+          accts.accounts
+            .filter((a) => a.categories.some((c) => c.id === categoryId))
+            .map((a) => a.id),
         );
         setAllAccounts(accts.accounts);
         setUpcoming(data.filter((u) => accountIds.has(u.schedule.accountId)));
@@ -93,7 +116,13 @@ export default function TransactionsPage() {
     if (!id || loadingMore) return;
     setLoadingMore(true);
     try {
-      const data = await getTransactions(id, undefined, categoryId ?? undefined, 50, transactions.length);
+      const data = await getTransactions(
+        id,
+        undefined,
+        categoryId ?? undefined,
+        50,
+        transactions.length,
+      );
       setTransactions((prev) => [...prev, ...data]);
       setHasMore(data.length === 50);
     } catch (err) {
@@ -144,7 +173,7 @@ export default function TransactionsPage() {
                 ...tx,
                 payeeId: updated.payeeId,
                 payeeName: payeeId
-                  ? payees.find((p) => p.id === payeeId)?.name ?? tx.payeeName
+                  ? (payees.find((p) => p.id === payeeId)?.name ?? tx.payeeName)
                   : null,
               }
             : tx,
@@ -233,81 +262,166 @@ export default function TransactionsPage() {
       {upcoming.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-3">Scheduled Payments</h2>
-          <Table
-            aria-label="Upcoming payments"
-          >
-            <TableHeader>
-              <TableColumn key="due">Due</TableColumn>
-              <TableColumn key="schedule">Schedule</TableColumn>
-              <TableColumn key="account">Account</TableColumn>
-              <TableColumn key="payee">Payee</TableColumn>
-              <TableColumn key="amount" align="end">Amount</TableColumn>
-              <TableColumn key="action" hideHeader>Action</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {upcoming.map((u) => {
-                const amt = parseFloat(u.schedule.amount);
-                const statusColors: Record<string, string> = {
-                  missed: 'text-danger',
-                  overdue: 'text-danger',
-                  due_soon: 'text-warning',
-                  upcoming: '',
-                };
-                const statusLabels: Record<string, string> = {
-                  missed: 'Missed',
-                  overdue: 'Overdue',
-                  due_soon: 'Due soon',
-                  upcoming: 'Upcoming',
-                };
-                const daysText = u.occurrence.daysUntilDue < 0
+          <div className="hidden sm:block">
+            <Table aria-label="Upcoming payments">
+              <TableHeader>
+                <TableColumn key="due">Due</TableColumn>
+                <TableColumn key="schedule">Schedule</TableColumn>
+                <TableColumn key="account">Account</TableColumn>
+                <TableColumn key="payee">Payee</TableColumn>
+                <TableColumn key="amount" align="end">
+                  Amount
+                </TableColumn>
+                <TableColumn key="action" hideHeader>
+                  Action
+                </TableColumn>
+              </TableHeader>
+              <TableBody>
+                {upcoming.map((u) => {
+                  const amt = parseFloat(u.schedule.amount);
+                  const statusColors: Record<string, string> = {
+                    missed: 'text-danger',
+                    overdue: 'text-danger',
+                    due_soon: 'text-warning',
+                    upcoming: '',
+                  };
+                  const statusLabels: Record<string, string> = {
+                    missed: 'Missed',
+                    overdue: 'Overdue',
+                    due_soon: 'Due soon',
+                    upcoming: 'Upcoming',
+                  };
+                  const daysText =
+                    u.occurrence.daysUntilDue < 0
+                      ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
+                      : u.occurrence.daysUntilDue === 0
+                        ? 'Today'
+                        : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
+
+                  return (
+                    <TableRow
+                      key={`${u.schedule.id}-${u.occurrence.dueDate}`}
+                      className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]"
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-medium ${statusColors[u.occurrence.status] || ''}`}
+                          >
+                            {formatDate(u.occurrence.dueDate, dateFormat)}
+                          </span>
+                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                            ({daysText})
+                          </span>
+                        </div>
+                        <span
+                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                            statusColors[u.occurrence.status] || 'text-default-500'
+                          }`}
+                        >
+                          {statusLabels[u.occurrence.status] || ''}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-medium">{u.schedule.name}</TableCell>
+                      <TableCell>{u.schedule.accountName}</TableCell>
+                      <TableCell>{u.schedule.payeeName || '—'}</TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums text-danger">
+                        -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          color="primary"
+                          variant="flat"
+                          isLoading={payingId === u.schedule.id}
+                          isDisabled={payingId !== null}
+                          onPress={() => handlePaySchedule(u.schedule.id)}
+                          startContent={<CheckIcon width={14} />}
+                        >
+                          Pay
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="space-y-2 sm:hidden">
+            {upcoming.map((u) => {
+              const amt = parseFloat(u.schedule.amount);
+              const statusColors: Record<string, string> = {
+                missed: 'text-danger',
+                overdue: 'text-danger',
+                due_soon: 'text-warning',
+                upcoming: '',
+              };
+              const statusLabels: Record<string, string> = {
+                missed: 'Missed',
+                overdue: 'Overdue',
+                due_soon: 'Due soon',
+                upcoming: 'Upcoming',
+              };
+              const daysText =
+                u.occurrence.daysUntilDue < 0
                   ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
                   : u.occurrence.daysUntilDue === 0
                     ? 'Today'
                     : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
 
-                return (
-                  <TableRow key={`${u.schedule.id}-${u.occurrence.dueDate}`} className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className={`font-medium ${statusColors[u.occurrence.status] || ''}`}>
-                          {formatDate(u.occurrence.dueDate, dateFormat)}
+              return (
+                <Card
+                  key={`${u.schedule.id}-${u.occurrence.dueDate}`}
+                  className="w-full bg-surface-secondary transition-all duration-200"
+                >
+                  <CardBody>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm">{u.schedule.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                            {formatDate(u.occurrence.dueDate, dateFormat)}
+                          </span>
+                          <span
+                            className={`text-[10px] ${statusColors[u.occurrence.status] || 'text-default-500'}`}
+                          >
+                            ({daysText})
+                          </span>
+                        </div>
+                        <span
+                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                            statusColors[u.occurrence.status] || 'text-default-500'
+                          }`}
+                        >
+                          {statusLabels[u.occurrence.status] || ''}
                         </span>
-                        <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
-                          ({daysText})
-                        </span>
+                        <p className="text-xs text-default-500 mt-1">
+                          {u.schedule.accountName} → {u.schedule.payeeName || '—'}
+                        </p>
                       </div>
-                      <span
-                        className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                          statusColors[u.occurrence.status] || 'text-default-500'
-                        }`}
-                      >
-                        {statusLabels[u.occurrence.status] || ''}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-medium">{u.schedule.name}</TableCell>
-                    <TableCell>{u.schedule.accountName}</TableCell>
-                    <TableCell>{u.schedule.payeeName || '—'}</TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums text-danger">
-                      -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        color="primary"
-                        variant="flat"
-                        isLoading={payingId === u.schedule.id}
-                        isDisabled={payingId !== null}
-                        onPress={() => handlePaySchedule(u.schedule.id)}
-                        startContent={<CheckIcon width={14} />}
-                      >
-                        Pay
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <div className="flex flex-col items-end shrink-0 gap-2">
+                        <span className="text-sm font-semibold tabular-nums text-danger">
+                          -
+                          <Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                        </span>
+                        <Button
+                          size="sm"
+                          color="primary"
+                          variant="flat"
+                          isLoading={payingId === u.schedule.id}
+                          isDisabled={payingId !== null}
+                          onPress={() => handlePaySchedule(u.schedule.id)}
+                          startContent={<CheckIcon width={14} />}
+                        >
+                          Pay
+                        </Button>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -329,8 +443,12 @@ export default function TransactionsPage() {
                 <TableColumn key="date">Date</TableColumn>
                 <TableColumn key="account">Account</TableColumn>
                 <TableColumn key="payee">Payee</TableColumn>
-                <TableColumn key="amount" align="end">Amount</TableColumn>
-                <TableColumn key="actions" hideHeader>Actions</TableColumn>
+                <TableColumn key="amount" align="end">
+                  Amount
+                </TableColumn>
+                <TableColumn key="actions" hideHeader>
+                  Actions
+                </TableColumn>
               </TableHeader>
               <TableBody>
                 {transactions.map((tx) => {
@@ -340,7 +458,9 @@ export default function TransactionsPage() {
                     <TableRow
                       key={tx.id}
                       className={`transition-colors duration-150 ${
-                        !tx.isCleared ? 'opacity-40' : 'hover:bg-default-50 dark:hover:bg-white/[0.03]'
+                        !tx.isCleared
+                          ? 'opacity-40'
+                          : 'hover:bg-default-50 dark:hover:bg-white/[0.03]'
                       }`}
                     >
                       <TableCell>
@@ -417,7 +537,9 @@ export default function TransactionsPage() {
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className={`text-right font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
+                      <TableCell
+                        className={`text-right font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}
+                      >
                         {isEditing ? (
                           <input
                             ref={inputRef}
@@ -484,19 +606,26 @@ export default function TransactionsPage() {
                       <div className="min-w-0 flex-1">
                         {tx.transferAccountName ? (
                           <div className="text-sm font-medium truncate">
-                            <span className="text-xs text-default-500 font-semibold uppercase tracking-wider">TRANSFER </span>
+                            <span className="text-xs text-default-500 font-semibold uppercase tracking-wider">
+                              TRANSFER{' '}
+                            </span>
                             <span className="text-default-500">— </span>
                             {tx.transferAccountName}
                           </div>
                         ) : (
                           <div className="text-sm font-medium truncate">{tx.payeeName || '—'}</div>
                         )}
-                        <div className="text-xs text-default-500 mt-0.5">{formatDate(tx.date, dateFormat)}</div>
+                        <div className="text-xs text-default-500 mt-0.5">
+                          {formatDate(tx.date, dateFormat)}
+                        </div>
                         <div className="text-xs text-default-400 mt-0.5">{tx.accountName}</div>
                       </div>
                       <div className="flex flex-col items-end shrink-0">
-                        <span className={`text-sm font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
-                          {amt >= 0 ? '+' : ''}<Money amount={amt} currency={currency} locale={numberLocale} />
+                        <span
+                          className={`text-sm font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}
+                        >
+                          {amt >= 0 ? '+' : ''}
+                          <Money amount={amt} currency={currency} locale={numberLocale} />
                         </span>
                         {tx.attachmentCount && tx.attachmentCount > 0 ? (
                           <span className="inline-flex items-center gap-0.5 text-xs text-default-400 mt-0.5">
