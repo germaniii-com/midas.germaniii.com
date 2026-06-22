@@ -247,7 +247,7 @@ export default function EditTransactionPage() {
             variant={isExpense ? 'solid' : 'light'}
             color={isExpense ? 'danger' : 'default'}
             onPress={() => setIsExpense(true)}
-            className="text-xl font-bold w-14 h-14"
+            className="text-xl font-bold w-14 h-14 active:scale-90 transition-all duration-150"
           >
             −
           </Button>
@@ -264,7 +264,7 @@ export default function EditTransactionPage() {
             className="w-64"
             classNames={{
               input: 'text-center text-3xl font-bold tabular-nums',
-              inputWrapper: 'h-14',
+              inputWrapper: 'h-14 transition-all duration-150',
             }}
           />
           <Button
@@ -272,7 +272,7 @@ export default function EditTransactionPage() {
             variant={!isExpense ? 'solid' : 'light'}
             color={!isExpense ? 'success' : 'default'}
             onPress={() => setIsExpense(false)}
-            className="text-xl font-bold w-14 h-14"
+            className="text-xl font-bold w-14 h-14 active:scale-90 transition-all duration-150"
           >
             +
           </Button>
@@ -464,7 +464,7 @@ export default function EditTransactionPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-dashed border-default-300 bg-default-50 text-default-400 hover:border-primary hover:text-primary disabled:opacity-50"
+              className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-dashed border-default-300 bg-default-50 text-default-400 hover:border-primary hover:text-primary hover:bg-primary/5 disabled:opacity-50 transition-all duration-200 active:scale-95"
             >
               {uploading ? (
                 <Spinner size="sm" />
@@ -507,7 +507,7 @@ export default function EditTransactionPage() {
       </DeleteConfirmModal>
 
       {/* Create Payee Modal */}
-      <Modal isOpen={payeeModalOpen} onClose={() => setPayeeModalOpen(false)} placement="center">
+      <Modal isOpen={payeeModalOpen} onClose={() => setPayeeModalOpen(false)} placement="center" backdrop="blur">
         <ModalContent>
           <ModalHeader>New Payee</ModalHeader>
           <ModalBody>
@@ -531,7 +531,7 @@ export default function EditTransactionPage() {
       </Modal>
 
       {/* Create Tag Modal */}
-      <Modal isOpen={tagModalOpen} onClose={() => setTagModalOpen(false)} placement="center">
+      <Modal isOpen={tagModalOpen} onClose={() => setTagModalOpen(false)} placement="center" backdrop="blur">
         <ModalContent>
           <ModalHeader>New Tag</ModalHeader>
           <ModalBody className="flex flex-col gap-4">
@@ -549,7 +549,7 @@ export default function EditTransactionPage() {
                   type="color"
                   value={newTagColor}
                   onChange={(e) => setNewTagColor(e.target.value)}
-                   className="h-10 w-16 cursor-pointer bg-transparent p-1"
+                   className="h-10 w-16 cursor-pointer bg-transparent p-1 rounded-lg transition-shadow duration-150 focus-visible:ring-2 focus-visible:ring-primary"
                 />
                 <span className="text-sm font-mono text-app-muted">{newTagColor}</span>
               </div>
@@ -572,6 +572,7 @@ export default function EditTransactionPage() {
         onClose={() => setPreviewAttachmentId(null)}
         size="4xl"
         placement="center"
+        backdrop="blur"
       >
         <ModalContent>
           {previewAttachmentId && (

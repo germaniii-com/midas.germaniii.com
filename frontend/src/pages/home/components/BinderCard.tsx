@@ -9,7 +9,7 @@ interface BinderCardProps {
 
 export default function BinderCard({ binder, onPress }: BinderCardProps) {
   return (
-    <Card isPressable onPress={onPress} className="min-h-[120px]">
+    <Card isPressable onPress={onPress} className="min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
       <CardBody className="flex flex-col justify-center p-5">
         <div className="flex items-center gap-2 mb-1">
           <LockClosedIcon width={16} className="text-app-muted shrink-0" />

@@ -70,7 +70,7 @@ export default function PaymentSchedulesPage() {
       {error && <p className="text-danger text-sm mb-4">{error}</p>}
 
       {sorted.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No payment schedules yet</p>
           <p className="text-app-muted text-sm">Create your first schedule to start tracking recurring payments.</p>
         </div>
@@ -101,7 +101,9 @@ export default function PaymentSchedulesPage() {
               return (
                 <TableRow
                   key={s.id}
-                  className={`${!s.isActive ? 'opacity-40' : ''}`}
+                  className={`transition-colors duration-150 ${
+                    !s.isActive ? 'opacity-40' : 'hover:bg-default-50 dark:hover:bg-white/[0.03]'
+                  }`}
                 >
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell>{s.payeeName || '—'}</TableCell>
@@ -131,6 +133,7 @@ export default function PaymentSchedulesPage() {
                       variant="light"
                       size="sm"
                       onPress={() => navigate(`/binders/${id}/payment-schedules/${s.id}`)}
+                      className="transition-all duration-150 active:scale-90"
                     >
                       <PencilIcon width={15} />
                     </Button>

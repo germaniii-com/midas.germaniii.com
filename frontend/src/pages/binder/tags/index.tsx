@@ -58,7 +58,7 @@ export default function TagsPage() {
       )}
 
       {tags.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No tags yet</p>
           <p className="text-app-muted text-sm">
             Create your first tag to organize your accounts.
@@ -66,10 +66,11 @@ export default function TagsPage() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {tags.map((tag) => (
+          {tags.map((tag, i) => (
             <Card
               key={tag.id}
-              className="bg-surface-secondary"
+              className="bg-surface-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] animate-fade-in-up animate-fill-both"
+              style={{ animationDelay: `${i * 50}ms` }}
               isPressable
               onPress={() => navigate(`/binders/${id}/tags/${tag.id}`)}
             >

@@ -50,7 +50,7 @@ export default function BinderLoginModal({ binder, onClose }: BinderLoginModalPr
   }
 
   return (
-    <Modal isOpen={!!binder} onClose={handleClose} placement="center">
+    <Modal isOpen={!!binder} onClose={handleClose} placement="center" backdrop="blur">
       <ModalContent>
         <ModalHeader className="justify-center text-lg">
           Unlock: {binder?.name}

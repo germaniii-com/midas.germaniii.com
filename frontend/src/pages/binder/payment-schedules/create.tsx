@@ -170,7 +170,7 @@ export default function CreatePaymentSchedulePage() {
               variant={isExpense ? 'solid' : 'light'}
               color={isExpense ? 'danger' : 'default'}
               onPress={() => setIsExpense(true)}
-              className="text-xl font-bold w-14 h-14"
+              className="text-xl font-bold w-14 h-14 active:scale-90 transition-all duration-150"
             >
               −
             </Button>
@@ -184,7 +184,7 @@ export default function CreatePaymentSchedulePage() {
               className="w-64"
               classNames={{
                 input: 'text-center text-3xl font-bold tabular-nums',
-                inputWrapper: 'h-14',
+                inputWrapper: 'h-14 transition-all duration-150',
               }}
             />
             <Button
@@ -192,7 +192,7 @@ export default function CreatePaymentSchedulePage() {
               variant={!isExpense ? 'solid' : 'light'}
               color={!isExpense ? 'success' : 'default'}
               onPress={() => setIsExpense(false)}
-              className="text-xl font-bold w-14 h-14"
+              className="text-xl font-bold w-14 h-14 active:scale-90 transition-all duration-150"
             >
               +
             </Button>
@@ -411,7 +411,7 @@ export default function CreatePaymentSchedulePage() {
         </Button>
       </div>
 
-      <Modal isOpen={payeeModalOpen} onClose={() => setPayeeModalOpen(false)} placement="center">
+      <Modal isOpen={payeeModalOpen} onClose={() => setPayeeModalOpen(false)} placement="center" backdrop="blur">
         <ModalContent>
           <ModalHeader>New Payee</ModalHeader>
           <ModalBody>

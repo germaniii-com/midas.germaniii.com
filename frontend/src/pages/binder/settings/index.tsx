@@ -57,7 +57,7 @@ export default function SettingsPage() {
 
       <div className="flex flex-col gap-4">
         {/* Export */}
-        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+        <section className="rounded-xl p-4 transition-all duration-200 hover:shadow-sm" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">Export Binder</h2>
           <p className="text-sm text-app-muted mb-3">Download all binder data as a SQL file</p>
           <Button
@@ -70,7 +70,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Import */}
-        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+        <section className="rounded-xl p-4 transition-all duration-200 hover:shadow-sm" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">Import Binder</h2>
           <p className="text-sm text-app-muted mb-3">Restore a binder from a SQL export file</p>
           <Button
@@ -82,14 +82,14 @@ export default function SettingsPage() {
         </section>
 
         {/* Theme */}
-        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+        <section className="rounded-xl p-4 transition-all duration-200 hover:shadow-sm" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">Theme</h2>
           <p className="text-sm text-app-muted mb-3">Choose between light and dark mode</p>
           <Button
             variant="light"
             onPress={toggle}
             aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg h-auto"
+            className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg h-auto active:scale-[0.97] transition-all duration-200"
           >
             {theme === 'light' ? <MoonIcon width={22} /> : <SunIcon width={22} />}
             <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
@@ -97,7 +97,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Display value format */}
-        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+        <section className="rounded-xl p-4 transition-all duration-200 hover:shadow-sm" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">Display value format</h2>
           <p className="text-sm text-app-muted mb-3">How numbers are displayed</p>
           <Select
@@ -119,7 +119,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Date format */}
-        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+        <section className="rounded-xl p-4 transition-all duration-200 hover:shadow-sm" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">Date format</h2>
           <p className="text-sm text-app-muted mb-3">How dates are displayed</p>
           <Select
@@ -139,7 +139,7 @@ export default function SettingsPage() {
         </section>
 
         {/* First day of week */}
-        <section className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+        <section className="rounded-xl p-4 transition-all duration-200 hover:shadow-sm" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
           <h2 className="text-lg font-semibold mb-1">First day of the week</h2>
           <p className="text-sm text-app-muted mb-3">Sets which day starts the week</p>
           <Select

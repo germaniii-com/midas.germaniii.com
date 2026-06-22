@@ -75,14 +75,15 @@ export default function AccountsPage() {
     return map;
   }, [accounts]);
 
-  function renderAccountCard(account: Account) {
+  function renderAccountCard(account: Account, animationDelay = '0ms') {
     const balanceNum = parseFloat(account.balance);
     return (
       <Card
         key={account.id}
         isPressable
         onPress={() => navigate(`/binders/${id}/accounts/${account.id}/transactions`)}
-        className="bg-surface-secondary"
+        className="bg-surface-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] animate-fade-in-up animate-fill-both"
+        style={{ animationDelay }}
       >
         <CardBody className="flex flex-row items-center gap-3">
           <div className="flex-1 min-w-0">
@@ -145,7 +146,7 @@ export default function AccountsPage() {
       {error && <p className="text-danger text-sm mb-4">{error}</p>}
 
       {accounts.length > 0 && (
-        <Card className="mb-4 bg-surface-secondary">
+        <Card className="mb-4 bg-surface-secondary transition-all duration-200 hover:shadow-md">
           <CardBody className="flex flex-row items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">All Accounts</p>
@@ -168,7 +169,7 @@ export default function AccountsPage() {
       )}
 
       {accounts.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No accounts yet</p>
           <p className="text-app-muted text-sm">Create your first account to start tracking.</p>
         </div>
@@ -204,16 +205,20 @@ export default function AccountsPage() {
                   )}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.accounts.map(renderAccountCard)}
+                  {group.accounts.map((account, j) =>
+                    renderAccountCard(account, `${j * 50}ms`),
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {accounts.map(renderAccountCard)}
-        </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {accounts.map((account, i) =>
+              renderAccountCard(account, `${i * 50}ms`),
+            )}
+          </div>
       )}
     </div>
   );

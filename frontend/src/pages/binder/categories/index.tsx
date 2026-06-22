@@ -56,7 +56,7 @@ export default function CategoriesPage() {
       )}
 
       {categories.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No categories yet</p>
           <p className="text-app-muted text-sm">
             Create your first category to organize your accounts.
@@ -64,10 +64,11 @@ export default function CategoriesPage() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
+          {categories.map((category, i) => (
             <Card
               key={category.id}
-              className="bg-surface-secondary"
+              className="bg-surface-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] animate-fade-in-up animate-fill-both"
+              style={{ animationDelay: `${i * 50}ms` }}
               isPressable
               onPress={() => navigate(`/binders/${id}/categories/${category.id}`)}
             >

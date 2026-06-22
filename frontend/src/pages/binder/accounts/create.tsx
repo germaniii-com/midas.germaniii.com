@@ -145,7 +145,7 @@ export default function CreateAccountPage() {
         </Button>
       </div>
 
-      <Modal isOpen={categoryModalOpen} onClose={() => setCategoryModalOpen(false)} placement="center">
+      <Modal isOpen={categoryModalOpen} onClose={() => setCategoryModalOpen(false)} placement="center" backdrop="blur">
         <ModalContent>
           <ModalHeader>New Category</ModalHeader>
           <ModalBody>

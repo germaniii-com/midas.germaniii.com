@@ -207,7 +207,7 @@ export default function EditAccountPage() {
         <p>Are you sure you want to delete <strong>{name}</strong>? This action cannot be undone.</p>
       </DeleteConfirmModal>
 
-      <Modal isOpen={categoryModalOpen} onClose={() => setCategoryModalOpen(false)} placement="center">
+      <Modal isOpen={categoryModalOpen} onClose={() => setCategoryModalOpen(false)} placement="center" backdrop="blur">
         <ModalContent>
           <ModalHeader>New Category</ModalHeader>
           <ModalBody>

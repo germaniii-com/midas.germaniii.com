@@ -111,7 +111,7 @@ export default function BinderImportModal({ isOpen, onClose }: BinderImportModal
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} placement="center" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} placement="center" size="lg" backdrop="blur">
       <ModalContent>
         <ModalHeader className="justify-center text-lg">Import Binder</ModalHeader>
         <ModalBody className="flex flex-col gap-4">

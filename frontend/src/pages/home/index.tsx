@@ -39,30 +39,32 @@ export default function HomePage() {
           variant="light"
           onPress={toggle}
           aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          className="active:scale-90 transition-all duration-150"
         >
           {theme === 'light' ? <MoonIcon width={18} /> : <SunIcon width={18} />}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card isPressable onPress={() => setImportOpen(true)} className="min-h-[120px]">
+        <Card isPressable onPress={() => setImportOpen(true)} className="min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
           <CardBody className="flex flex-col items-center justify-center p-5 gap-2">
             <ArrowUpTrayIcon width={24} className="text-app-muted" />
             <span className="text-app-muted font-medium">Import Binder</span>
           </CardBody>
         </Card>
-        <Card isPressable onPress={() => navigate('/create')} className="min-h-[120px]">
+        <Card isPressable onPress={() => navigate('/create')} className="min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
           <CardBody className="flex flex-col items-center justify-center p-5 gap-2">
             <PlusIcon width={24} className="text-app-muted" />
             <span className="text-app-muted font-medium">Create Binder</span>
           </CardBody>
         </Card>
-        {binders.map((binder) => (
-          <BinderCard
-            key={binder.id}
-            binder={binder}
-            onPress={() => setSelectedBinder(binder)}
-          />
+        {binders.map((binder, i) => (
+          <div key={binder.id} className="animate-fade-in-up animate-fill-both" style={{ animationDelay: `${i * 80}ms` }}>
+            <BinderCard
+              binder={binder}
+              onPress={() => setSelectedBinder(binder)}
+            />
+          </div>
         ))}
       </div>
 

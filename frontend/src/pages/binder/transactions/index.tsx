@@ -266,7 +266,7 @@ export default function TransactionsPage() {
                     : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
 
                 return (
-                  <TableRow key={`${u.schedule.id}-${u.occurrence.dueDate}`}>
+                  <TableRow key={`${u.schedule.id}-${u.occurrence.dueDate}`} className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]">
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className={`font-medium ${statusColors[u.occurrence.status] || ''}`}>
@@ -312,7 +312,7 @@ export default function TransactionsPage() {
       )}
 
       {transactions.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No transactions yet</p>
           <p className="text-app-muted text-sm">Add your first transaction to start tracking.</p>
         </div>
@@ -339,7 +339,9 @@ export default function TransactionsPage() {
                   return (
                     <TableRow
                       key={tx.id}
-                      className={`${!tx.isCleared ? 'opacity-40' : ''}`}
+                      className={`transition-colors duration-150 ${
+                        !tx.isCleared ? 'opacity-40' : 'hover:bg-default-50 dark:hover:bg-white/[0.03]'
+                      }`}
                     >
                       <TableCell>
                         {editingDateTxId === tx.id ? (
@@ -352,12 +354,12 @@ export default function TransactionsPage() {
                               else if (e.key === 'Escape') setEditingDateTxId(null);
                             }}
                             onBlur={() => setEditingDateTxId(null)}
-                            className="rounded border border-primary bg-transparent px-1 py-0.5 text-sm outline-none"
+                            className="rounded border border-primary bg-transparent px-1 py-0.5 text-sm ring-2 ring-primary/20 outline-none transition-all duration-150"
                             autoFocus
                           />
                         ) : (
                           <span
-                            className="sm:cursor-pointer"
+                            className="sm:cursor-pointer transition-colors duration-150 hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingDateTxId(tx.id);
@@ -394,7 +396,7 @@ export default function TransactionsPage() {
                             onChange={(e) => handlePayeeSelect(tx.id, e.target.value || null)}
                             onBlur={() => setEditingPayeeTxId(null)}
                             autoFocus
-                            className="max-w-32 rounded border border-primary bg-transparent px-1 py-0.5 text-sm outline-none"
+                            className="max-w-32 rounded border border-primary bg-transparent px-1 py-0.5 text-sm ring-2 ring-primary/20 outline-none transition-all duration-150"
                           >
                             <option value="">—</option>
                             {payees.map((p) => (
@@ -405,7 +407,7 @@ export default function TransactionsPage() {
                           </select>
                         ) : (
                           <span
-                            className="sm:cursor-pointer"
+                            className="sm:cursor-pointer transition-colors duration-150 hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingPayeeTxId(tx.id);
@@ -430,12 +432,12 @@ export default function TransactionsPage() {
                               }
                             }}
                             onBlur={() => setEditingId(null)}
-                            className="w-28 rounded border border-primary bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums outline-none"
+                            className="w-28 rounded border border-primary bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums ring-2 ring-primary/20 outline-none transition-all duration-150"
                             autoFocus
                           />
                         ) : (
                           <span
-                            className="cursor-pointer sm:cursor-text"
+                            className="cursor-pointer sm:cursor-text transition-colors duration-150 hover:text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingId(tx.id);
@@ -454,6 +456,7 @@ export default function TransactionsPage() {
                           variant="light"
                           size="sm"
                           onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
+                          className="transition-all duration-150 active:scale-90"
                         >
                           <PencilIcon width={15} />
                         </Button>
@@ -470,7 +473,9 @@ export default function TransactionsPage() {
               return (
                 <Card
                   key={tx.id}
-                  className={`w-full bg-surface-secondary ${!tx.isCleared ? 'opacity-40' : ''}`}
+                  className={`w-full bg-surface-secondary transition-all duration-200 active:scale-[0.98] ${
+                    !tx.isCleared ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'
+                  }`}
                   isPressable
                   onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
                 >
@@ -514,6 +519,7 @@ export default function TransactionsPage() {
                 isLoading={loadingMore}
                 isDisabled={loadingMore}
                 onPress={loadMore}
+                className={loadingMore ? 'animate-pulse-subtle' : ''}
               >
                 Load More
               </Button>

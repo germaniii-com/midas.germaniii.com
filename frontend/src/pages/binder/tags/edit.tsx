@@ -111,7 +111,7 @@ export default function EditTagPage() {
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-               className="h-10 w-16 cursor-pointer bg-transparent p-1"
+               className="h-10 w-16 cursor-pointer bg-transparent p-1 rounded-lg transition-shadow duration-150 focus-visible:ring-2 focus-visible:ring-primary"
             />
             <span className="text-sm font-mono text-app-muted">{color}</span>
           </div>

@@ -120,15 +120,15 @@ export default function BinderLayout() {
               to={to}
               className={
                 navCollapsed
-                  ? `flex items-center justify-center p-1 text-sm font-medium rounded-full transition-colors ${
+                  ? `flex items-center justify-center p-1.5 text-sm font-medium rounded-xl transition-all duration-200 ${
                       isActive
-                        ? 'bg-background text-primary shadow'
-                        : 'text-app-muted hover:text-app-text hover:bg-app-surface'
+                        ? 'bg-background text-primary shadow-sm scale-110'
+                        : 'text-app-muted hover:text-app-text hover:bg-app-surface active:scale-90'
                     }`
-                  : `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  : `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-background text-primary shadow'
-                        : 'text-app-muted hover:text-app-text hover:bg-app-surface'
+                        ? 'bg-background text-primary shadow-sm border-l-2 border-primary pl-[10px]'
+                        : 'text-app-muted hover:text-app-text hover:bg-app-surface active:scale-[0.97]'
                     }`
               }
             >
@@ -145,7 +145,7 @@ export default function BinderLayout() {
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
       <aside
-        className={`hidden md:flex flex-col bg-app-surface-secondary shrink-0 transition-all duration-300 ${
+        className={`hidden md:flex flex-col bg-app-surface-secondary shrink-0 transition-all duration-300 border-r border-border ${
           collapsed ? 'w-16' : 'w-64'
         }`}
       >
@@ -192,7 +192,7 @@ export default function BinderLayout() {
               variant="light"
               onPress={() => setShowMoney(!showMoney)}
               aria-label={showMoney ? 'Hide balances' : 'Show balances'}
-              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
+              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface active:scale-[0.97] transition-all duration-200 ${
                 collapsed
                   ? 'justify-center px-0 py-2.5 min-w-0 h-auto'
                   : 'justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto'
@@ -201,24 +201,31 @@ export default function BinderLayout() {
               {showMoney ? <EyeIcon width={22} /> : <EyeSlashIcon width={22} />}
               {!collapsed && <span>{showMoney ? 'Hide Balances' : 'Show Balances'}</span>}
             </Button>
-            <Button
-              variant="light"
-              onPress={() => navigate(`${basePath}/settings`)}
+            <NavLink
+              to={`${basePath}/settings`}
               aria-label="Settings"
-              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
+              className={`flex items-center rounded-lg transition-all duration-200 ${
                 collapsed
-                  ? 'justify-center px-0 py-2.5 min-w-0 h-auto'
-                  : 'justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto'
+                  ? `justify-center px-0 py-2.5 min-w-0 h-auto rounded-lg ${
+                      location.pathname === `${basePath}/settings`
+                        ? 'bg-background text-primary shadow-sm'
+                        : 'text-app-muted hover:text-app-text hover:bg-app-surface active:scale-90'
+                    }`
+                  : `justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto rounded-lg ${
+                      location.pathname === `${basePath}/settings`
+                        ? 'bg-background text-primary shadow-sm border-l-2 border-primary pl-[10px]'
+                        : 'text-app-muted hover:text-app-text hover:bg-app-surface active:scale-[0.97]'
+                    }`
               }`}
             >
               <Cog6ToothIcon width={22} />
               {!collapsed && <span>Settings</span>}
-            </Button>
+            </NavLink>
             <Button
               variant="light"
               onPress={() => setCollapsed(!collapsed)}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface ${
+              className={`flex items-center rounded-lg text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface active:scale-[0.97] transition-all duration-200 ${
                 collapsed
                   ? 'justify-center px-0 py-2.5 min-w-0 h-auto'
                   : 'justify-start gap-3 w-full px-3 py-2.5 text-sm font-medium h-auto'
@@ -246,7 +253,7 @@ export default function BinderLayout() {
         <Button
           isIconOnly
           onPress={() => setDrawerOpen(!drawerOpen)}
-          className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-12 h-12 rounded-full bg-primary text-white shadow-lg data-[hover=true]:opacity-90 transition-all active:scale-95 ${
+          className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-12 h-12 rounded-full bg-primary text-white shadow-lg data-[hover=true]:opacity-90 transition-all active:scale-90 animate-pulse-subtle ${
             drawerOpen ? 'opacity-0 pointer-events-none' : ''
           }`}
           aria-label="Open navigation"
@@ -255,20 +262,23 @@ export default function BinderLayout() {
         </Button>
 
         <div
-          className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+          className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-all duration-300 ${
             drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           onClick={() => setDrawerOpen(false)}
         />
       </div>
 
-      {drawerOpen && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 shadow-xl rounded-t-2xl safe-bottom">
-          <div className="flex justify-center pt-2 pb-1">
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 shadow-xl rounded-t-2xl safe-bottom transition-all duration-300 ease-out ${
+          drawerOpen ? 'translate-y-0' : 'translate-y-full pointer-events-none'
+        }`}
+      >
+          <div className="flex justify-center pt-2 pb-1 animate-fade-in">
             <div className="w-10 h-1 bg-app-muted/40 rounded-full" />
           </div>
 
-          <div className="grid grid-cols-3 gap-2 p-4 pt-2">
+          <div className="grid grid-cols-3 gap-2 p-4 pt-2 animate-fade-in-up">
             {navItems.map((item) => {
               const to = `${basePath}/${item.path}`;
               const isActive = location.pathname === to;
@@ -290,20 +300,23 @@ export default function BinderLayout() {
               );
             })}
 
-            <Button
-              variant="light"
-              onPress={() => { setDrawerOpen(false); navigate(`${basePath}/settings`); }}
+            <NavLink
+              to={`${basePath}/settings`}
+              onClick={() => setDrawerOpen(false)}
               aria-label="Settings"
-              className="flex flex-col items-center gap-1 py-3 px-2 text-xs font-medium rounded-xl text-app-muted data-[hover=true]:text-app-text data-[hover=true]:bg-app-surface h-auto min-w-0"
+              className={`flex flex-col items-center gap-1 py-3 px-2 text-xs font-medium rounded-xl transition-colors ${
+                location.pathname === `${basePath}/settings`
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-app-muted hover:text-app-text hover:bg-app-surface'
+              }`}
             >
               <Cog6ToothIcon width={22} />
               <span>Settings</span>
-            </Button>
+            </NavLink>
           </div>
         </div>
-      )}
 
-      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} placement="center">
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} placement="center" backdrop="blur">
         <ModalContent>
           <ModalHeader>Edit Binder</ModalHeader>
           <ModalBody className="flex flex-col gap-4">

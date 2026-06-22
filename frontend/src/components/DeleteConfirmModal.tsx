@@ -18,7 +18,7 @@ export default function DeleteConfirmModal({
   children,
 }: DeleteConfirmModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} placement="center">
+    <Modal isOpen={isOpen} onClose={onClose} placement="center" backdrop="blur">
       <ModalContent>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody>{children}</ModalBody>
