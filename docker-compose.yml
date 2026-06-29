@@ -61,6 +61,7 @@ services:
       - NODE_ENV=development
       - PORT=5000
       - DATABASE_URL=postgresql://budget_user:budget_password@db:5432/actual_clone_db
+      - STORAGE_MODE=s3
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=minioadmin

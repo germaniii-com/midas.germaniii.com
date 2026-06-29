@@ -3,7 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import sharp from 'sharp';
 import { db } from '../db';
 import { transactionAttachments } from '../db/schema';
-import { uploadFile, getFile, deleteFile, generateObjectName } from '../minio';
+import { storage } from '../storage';
 
 async function getAttachment(transactionId: string, attachmentId: string) {
   const [attachment] = await db
@@ -59,8 +59,8 @@ export async function attachmentRoutes(app: FastifyInstance) {
         return reply.status(409).send({ error: `A file named "${fileName}" already exists on this transaction` });
       }
 
-      const objectName = generateObjectName(binderId, transactionId, fileName);
-      await uploadFile(objectName, buffer, mimeType);
+      const objectName = storage.generateObjectName(binderId, transactionId, fileName);
+      await storage.uploadFile(objectName, buffer, mimeType);
 
       const [attachment] = await db
         .insert(transactionAttachments)
@@ -110,7 +110,7 @@ export async function attachmentRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: 'Attachment not found' });
       }
 
-      const buffer = await getFile(attachment.objectName);
+      const buffer = await storage.getFile(attachment.objectName);
 
       return reply
         .header('Content-Type', attachment.mimeType || 'application/octet-stream')
@@ -134,7 +134,7 @@ export async function attachmentRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: 'Thumbnail not available for non-image files' });
       }
 
-      const buffer = await getFile(attachment.objectName);
+      const buffer = await storage.getFile(attachment.objectName);
       const thumbnail = Buffer.from(await sharp(buffer).resize(120).webp({ quality: 70 }).toBuffer());
 
       return reply
@@ -154,7 +154,7 @@ export async function attachmentRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: 'Attachment not found' });
       }
 
-      await deleteFile(attachment.objectName);
+      await storage.deleteFile(attachment.objectName);
 
       await db
         .delete(transactionAttachments)

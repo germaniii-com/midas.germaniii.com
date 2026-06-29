@@ -13,7 +13,7 @@ import { payeeRoutes } from './routes/payees';
 import { paymentScheduleRoutes } from './routes/payment-schedules';
 import { reportRoutes } from './routes/reports';
 import { attachmentRoutes } from './routes/attachments';
-import { ensureBucket } from './minio';
+import { storage } from './storage';
 
 const app = Fastify({ logger: true });
 
@@ -45,7 +45,7 @@ app.register(routes, { prefix: '/api' });
 
 const start = async () => {
   try {
-    await ensureBucket();
+    await storage.init();
     await app.listen({ port: Number(process.env.PORT) || 3000, host: '0.0.0.0' });
   } catch (err) {
     app.log.error(err);

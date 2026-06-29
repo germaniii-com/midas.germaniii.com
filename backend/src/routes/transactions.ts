@@ -3,7 +3,7 @@ import { eq, and, sql, inArray, count } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db } from '../db';
 import { transactions, accounts, payees, tags, transactionTags, accountCategories, transactionAttachments } from '../db/schema';
-import { deleteFile } from '../minio';
+import { storage } from '../storage';
 
 interface CreateTransactionBody {
   accountId: string;
@@ -424,7 +424,7 @@ export async function transactionRoutes(app: FastifyInstance) {
         .where(inArray(transactionAttachments.transactionId, txIdsToDelete));
 
       for (const att of attachmentRows) {
-        await deleteFile(att.objectName).catch(() => {});
+        await storage.deleteFile(att.objectName).catch(() => {});
       }
 
       await db
