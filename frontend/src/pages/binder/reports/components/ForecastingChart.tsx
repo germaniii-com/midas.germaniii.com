@@ -18,6 +18,8 @@ import { getForecast, type ForecastRow } from '../../../../api/reports';
 import { getAccounts, type Account } from '../../../../api/accounts';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
 import { usePreferences } from '../../../../hooks/usePreferences';
+import { getErrorMessage } from '../../../../utils/toast';
+import { ErrorMessage } from '../../../../components/ErrorMessage';
 
 export default function ForecastingChart() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +33,7 @@ export default function ForecastingChart() {
 
   const [data, setData] = useState<ForecastRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -45,17 +48,27 @@ export default function ForecastingChart() {
       .catch(() => {});
   }, [id]);
 
-  useEffect(() => {
+  async function fetchData() {
     if (!id || !baseAccountId) return;
     setLoading(true);
-    getForecast(id, {
-      accountId: baseAccountId,
-      horizonDays,
-      includeDrafts,
-    })
-      .then(setData)
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
+    setError('');
+    try {
+      const result = await getForecast(id, {
+        accountId: baseAccountId,
+        horizonDays,
+        includeDrafts,
+      });
+      setData(result);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load forecast'));
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, [id, baseAccountId, horizonDays, includeDrafts]);
 
   if (!baseAccountId) {
@@ -108,7 +121,9 @@ export default function ForecastingChart() {
           Include drafts
         </Switch>
       </div>
-      {data.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchData} />
+      ) : data.length === 0 ? (
         <p className="text-app-muted text-sm py-16 text-center">No forecast data</p>
       ) : (
         <>

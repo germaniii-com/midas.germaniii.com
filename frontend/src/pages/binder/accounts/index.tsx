@@ -5,6 +5,7 @@ import { PlusIcon, ChevronRightIcon, EyeIcon, EyeSlashIcon } from '@heroicons/re
 import { getAccounts, type Account, type CategorySum } from '../../../api/accounts';
 import { typeLabels } from '../../../constants/accountTypes';
 import { getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 import { useBinderCurrency } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
 import type { NumberLocale } from '../../../constants/preferences';
@@ -143,37 +144,38 @@ export default function AccountsPage() {
         </div>
       </div>
 
-      {error && <p className="text-danger text-sm mb-4">{error}</p>}
-
-      {accounts.length > 0 && (
-        <Card className="mb-4 bg-surface-secondary transition-all duration-200 hover:shadow-md">
-          <CardBody className="flex flex-row items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">All Accounts</p>
-              <p
-                className={`text-lg font-semibold ${
-                  accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0) >= 0
-                    ? 'text-success'
-                    : 'text-danger'
-                }`}
-              >
-                <Money
-                  amount={accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0)}
-                  currency={currency}
-                  locale={numberLocale}
-                />
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
-      {accounts.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchAccounts} />
+      ) : accounts.length === 0 ? (
         <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No accounts yet</p>
           <p className="text-app-muted text-sm">Create your first account to start tracking.</p>
         </div>
-      ) : viewMode === 'grouped' ? (
+      ) : (
+        <>
+        {accounts.length > 0 && (
+          <Card className="mb-4 bg-surface-secondary transition-all duration-200 hover:shadow-md">
+            <CardBody className="flex flex-row items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">All Accounts</p>
+                <p
+                  className={`text-lg font-semibold ${
+                    accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0) >= 0
+                      ? 'text-success'
+                      : 'text-danger'
+                  }`}
+                >
+                  <Money
+                    amount={accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0)}
+                    currency={currency}
+                    locale={numberLocale}
+                  />
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+      {viewMode === 'grouped' ? (
         <div className="space-y-8">
           {Array.from(grouped.entries()).map(([key, group]) => {
             const sum =
@@ -219,6 +221,8 @@ export default function AccountsPage() {
               renderAccountCard(account, `${i * 50}ms`),
             )}
           </div>
+      )}
+      </>
       )}
     </div>
   );

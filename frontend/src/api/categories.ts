@@ -1,4 +1,4 @@
-import { API_URL } from '.';
+import { API_URL, apiFetch } from '.';
 
 export interface Category {
   id: string;
@@ -16,7 +16,7 @@ export interface UpdateCategoryData {
 }
 
 export async function getCategories(binderId: string): Promise<Category[]> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/categories`);
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/categories`);
   if (!res.ok) throw new Error('Failed to fetch categories');
   return res.json();
 }
@@ -25,7 +25,7 @@ export async function getCategory(
   binderId: string,
   categoryId: string,
 ): Promise<Category> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/categories/${categoryId}`);
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/categories/${categoryId}`);
   if (!res.ok) throw new Error('Category not found');
   return res.json();
 }
@@ -34,7 +34,7 @@ export async function createCategory(
   binderId: string,
   data: CreateCategoryData,
 ): Promise<Category> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/categories/create`, {
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/categories/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -51,7 +51,7 @@ export async function updateCategory(
   categoryId: string,
   data: UpdateCategoryData,
 ): Promise<Category> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/categories/${categoryId}`, {
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/categories/${categoryId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -67,7 +67,7 @@ export async function deleteCategory(
   binderId: string,
   categoryId: string,
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/categories/${categoryId}`, {
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/categories/${categoryId}`, {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Failed to delete category');

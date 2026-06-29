@@ -4,6 +4,7 @@ import { Button, Card, CardBody, Spinner } from '@heroui/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { getCategories, type Category } from '../../../api/categories';
 import { getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 
 export default function CategoriesPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,11 +52,9 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-danger text-sm mb-4">{error}</p>
-      )}
-
-      {categories.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchCategories} />
+      ) : categories.length === 0 ? (
         <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No categories yet</p>
           <p className="text-app-muted text-sm">

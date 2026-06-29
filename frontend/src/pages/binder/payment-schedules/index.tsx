@@ -7,6 +7,7 @@ import { formatDate, useBinderCurrency } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
 import { Money } from '../../../components/Money';
 import { getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 
 export default function PaymentSchedulesPage() {
   const { id } = useParams<{ id: string }>();
@@ -78,9 +79,9 @@ export default function PaymentSchedulesPage() {
         Show inactive
       </Checkbox>
 
-      {error && <p className="text-danger text-sm mb-4">{error}</p>}
-
-      {schedules.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchSchedules} />
+      ) : schedules.length === 0 ? (
         <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No payment schedules yet</p>
           <p className="text-app-muted text-sm">Create your first schedule to start tracking recurring payments.</p>

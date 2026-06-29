@@ -15,6 +15,8 @@ import { getCashFlow, type CashFlowRow } from '../../../../api/reports';
 import { getAccounts, type Account } from '../../../../api/accounts';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
 import { usePreferences } from '../../../../hooks/usePreferences';
+import { getErrorMessage } from '../../../../utils/toast';
+import { ErrorMessage } from '../../../../components/ErrorMessage';
 
 export default function CashFlowChart() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +35,7 @@ export default function CashFlowChart() {
 
   const [data, setData] = useState<CashFlowRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -41,18 +44,28 @@ export default function CashFlowChart() {
       .catch(() => {});
   }, [id]);
 
-  useEffect(() => {
+  async function fetchData() {
     if (!id) return;
     setLoading(true);
-    getCashFlow(id, {
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      interval,
-      accountIds: selectedAccountIds.length > 0 ? selectedAccountIds.join(',') : undefined,
-    })
-      .then(setData)
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
+    setError('');
+    try {
+      const result = await getCashFlow(id, {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        interval,
+        accountIds: selectedAccountIds.length > 0 ? selectedAccountIds.join(',') : undefined,
+      });
+      setData(result);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load cash flow data'));
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, [id, startDate, endDate, interval, selectedAccountIds]);
 
   if (loading) {
@@ -115,7 +128,9 @@ export default function CashFlowChart() {
           ))}
         </Select>
       </div>
-      {data.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchData} />
+      ) : data.length === 0 ? (
         <p className="text-app-muted text-sm py-16 text-center">No data for this period</p>
       ) : (
         <ResponsiveContainer width="100%" height={300}>

@@ -31,6 +31,7 @@ import { formatDate, useBinderCurrency } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
 import { Money } from '../../../components/Money';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 
 export default function TransactionsPage() {
   const { id } = useParams<{ id: string }>();
@@ -257,26 +258,103 @@ export default function TransactionsPage() {
         </Button>
       </div>
 
-      {error && <p className="text-danger text-sm mb-4">{error}</p>}
+      {error && transactions.length === 0 ? (
+        <ErrorMessage message={error} onRetry={() => { fetchTransactions(); fetchPayees(); fetchUpcoming(); }} />
+      ) : (
+        <>
+          {error && transactions.length > 0 && (
+            <p className="text-danger text-sm mb-4">{error}</p>
+          )}
 
-      {upcoming.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Scheduled Payments</h2>
-          <div className="hidden sm:block">
-            <Table aria-label="Upcoming payments">
-              <TableHeader>
-                <TableColumn key="due">Due</TableColumn>
-                <TableColumn key="schedule">Schedule</TableColumn>
-                <TableColumn key="account">Account</TableColumn>
-                <TableColumn key="payee">Payee</TableColumn>
-                <TableColumn key="amount" align="end">
-                  Amount
-                </TableColumn>
-                <TableColumn key="action" hideHeader>
-                  Action
-                </TableColumn>
-              </TableHeader>
-              <TableBody>
+          {upcoming.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-3">Scheduled Payments</h2>
+              <div className="hidden sm:block">
+                <Table aria-label="Upcoming payments">
+                  <TableHeader>
+                    <TableColumn key="due">Due</TableColumn>
+                    <TableColumn key="schedule">Schedule</TableColumn>
+                    <TableColumn key="account">Account</TableColumn>
+                    <TableColumn key="payee">Payee</TableColumn>
+                    <TableColumn key="amount" align="end">
+                      Amount
+                    </TableColumn>
+                    <TableColumn key="action" hideHeader>
+                      Action
+                    </TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {upcoming.map((u) => {
+                      const amt = parseFloat(u.schedule.amount);
+                      const statusColors: Record<string, string> = {
+                        missed: 'text-danger',
+                        overdue: 'text-danger',
+                        due_soon: 'text-warning',
+                        upcoming: '',
+                      };
+                      const statusLabels: Record<string, string> = {
+                        missed: 'Missed',
+                        overdue: 'Overdue',
+                        due_soon: 'Due soon',
+                        upcoming: 'Upcoming',
+                      };
+                      const daysText =
+                        u.occurrence.daysUntilDue < 0
+                          ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
+                          : u.occurrence.daysUntilDue === 0
+                            ? 'Today'
+                            : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
+
+                      return (
+                        <TableRow
+                          key={`${u.schedule.id}-${u.occurrence.dueDate}`}
+                          className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]"
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`font-medium ${statusColors[u.occurrence.status] || ''}`}
+                              >
+                                {formatDate(u.occurrence.dueDate, dateFormat)}
+                              </span>
+                              <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                                ({daysText})
+                              </span>
+                            </div>
+                            <span
+                              className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                                statusColors[u.occurrence.status] || 'text-default-500'
+                              }`}
+                            >
+                              {statusLabels[u.occurrence.status] || ''}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium">{u.schedule.name}</TableCell>
+                          <TableCell>{u.schedule.accountName}</TableCell>
+                          <TableCell>{u.schedule.payeeName || '—'}</TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums text-danger">
+                            -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              color="primary"
+                              variant="flat"
+                              isLoading={payingId === u.schedule.id}
+                              isDisabled={payingId !== null}
+                              onPress={() => handlePaySchedule(u.schedule.id)}
+                              startContent={<CheckIcon width={14} />}
+                            >
+                              Pay
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="space-y-2 sm:hidden">
                 {upcoming.map((u) => {
                   const amt = parseFloat(u.schedule.amount);
                   const statusColors: Record<string, string> = {
@@ -299,138 +377,67 @@ export default function TransactionsPage() {
                         : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
 
                   return (
-                    <TableRow
+                    <Card
                       key={`${u.schedule.id}-${u.occurrence.dueDate}`}
-                      className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]"
+                      className="w-full bg-surface-secondary transition-all duration-200"
                     >
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`font-medium ${statusColors[u.occurrence.status] || ''}`}
-                          >
-                            {formatDate(u.occurrence.dueDate, dateFormat)}
-                          </span>
-                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
-                            ({daysText})
-                          </span>
+                      <CardBody>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm">{u.schedule.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                                {formatDate(u.occurrence.dueDate, dateFormat)}
+                              </span>
+                              <span
+                                className={`text-[10px] ${statusColors[u.occurrence.status] || 'text-default-500'}`}
+                              >
+                                ({daysText})
+                              </span>
+                            </div>
+                            <span
+                              className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                                statusColors[u.occurrence.status] || 'text-default-500'
+                              }`}
+                            >
+                              {statusLabels[u.occurrence.status] || ''}
+                            </span>
+                            <p className="text-xs text-default-500 mt-1">
+                              {u.schedule.accountName} → {u.schedule.payeeName || '—'}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end shrink-0 gap-2">
+                            <span className="text-sm font-semibold tabular-nums text-danger">
+                              -
+                              <Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                            </span>
+                            <Button
+                              size="sm"
+                              color="primary"
+                              variant="flat"
+                              isLoading={payingId === u.schedule.id}
+                              isDisabled={payingId !== null}
+                              onPress={() => handlePaySchedule(u.schedule.id)}
+                              startContent={<CheckIcon width={14} />}
+                            >
+                              Pay
+                            </Button>
+                          </div>
                         </div>
-                        <span
-                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                            statusColors[u.occurrence.status] || 'text-default-500'
-                          }`}
-                        >
-                          {statusLabels[u.occurrence.status] || ''}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-medium">{u.schedule.name}</TableCell>
-                      <TableCell>{u.schedule.accountName}</TableCell>
-                      <TableCell>{u.schedule.payeeName || '—'}</TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums text-danger">
-                        -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          color="primary"
-                          variant="flat"
-                          isLoading={payingId === u.schedule.id}
-                          isDisabled={payingId !== null}
-                          onPress={() => handlePaySchedule(u.schedule.id)}
-                          startContent={<CheckIcon width={14} />}
-                        >
-                          Pay
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                      </CardBody>
+                    </Card>
                   );
                 })}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="space-y-2 sm:hidden">
-            {upcoming.map((u) => {
-              const amt = parseFloat(u.schedule.amount);
-              const statusColors: Record<string, string> = {
-                missed: 'text-danger',
-                overdue: 'text-danger',
-                due_soon: 'text-warning',
-                upcoming: '',
-              };
-              const statusLabels: Record<string, string> = {
-                missed: 'Missed',
-                overdue: 'Overdue',
-                due_soon: 'Due soon',
-                upcoming: 'Upcoming',
-              };
-              const daysText =
-                u.occurrence.daysUntilDue < 0
-                  ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
-                  : u.occurrence.daysUntilDue === 0
-                    ? 'Today'
-                    : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
+              </div>
+            </div>
+          )}
 
-              return (
-                <Card
-                  key={`${u.schedule.id}-${u.occurrence.dueDate}`}
-                  className="w-full bg-surface-secondary transition-all duration-200"
-                >
-                  <CardBody>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{u.schedule.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
-                            {formatDate(u.occurrence.dueDate, dateFormat)}
-                          </span>
-                          <span
-                            className={`text-[10px] ${statusColors[u.occurrence.status] || 'text-default-500'}`}
-                          >
-                            ({daysText})
-                          </span>
-                        </div>
-                        <span
-                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                            statusColors[u.occurrence.status] || 'text-default-500'
-                          }`}
-                        >
-                          {statusLabels[u.occurrence.status] || ''}
-                        </span>
-                        <p className="text-xs text-default-500 mt-1">
-                          {u.schedule.accountName} → {u.schedule.payeeName || '—'}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end shrink-0 gap-2">
-                        <span className="text-sm font-semibold tabular-nums text-danger">
-                          -
-                          <Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
-                        </span>
-                        <Button
-                          size="sm"
-                          color="primary"
-                          variant="flat"
-                          isLoading={payingId === u.schedule.id}
-                          isDisabled={payingId !== null}
-                          onPress={() => handlePaySchedule(u.schedule.id)}
-                          startContent={<CheckIcon width={14} />}
-                        >
-                          Pay
-                        </Button>
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {transactions.length === 0 ? (
-        <div className="text-center py-16 animate-fade-in-up">
-          <p className="text-app-muted text-lg mb-2">No transactions yet</p>
-          <p className="text-app-muted text-sm">Add your first transaction to start tracking.</p>
-        </div>
-      ) : (
+          {transactions.length === 0 ? (
+            <div className="text-center py-16 animate-fade-in-up">
+              <p className="text-app-muted text-lg mb-2">No transactions yet</p>
+              <p className="text-app-muted text-sm">Add your first transaction to start tracking.</p>
+            </div>
+          ) : (
         <>
           <div className="hidden sm:block">
             <Table
@@ -655,6 +662,8 @@ export default function TransactionsPage() {
             </div>
           )}
         </>
+      )}
+    </>
       )}
     </div>
   );

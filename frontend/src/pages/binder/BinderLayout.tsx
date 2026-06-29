@@ -23,6 +23,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePreferences } from '../../hooks/usePreferences';
 import { getBinderById, updateBinder, type Binder } from '../../api/binders';
+import { ErrorMessage } from '../../components/ErrorMessage';
 import { currencies } from '../../constants/currencies';
 import { toastSuccess, toastError, getErrorMessage } from '../../utils/toast';
 import { navItems } from '../../constants/navItems';
@@ -33,6 +34,7 @@ export default function BinderLayout() {
   const navigate = useNavigate();
   const [binder, setBinder] = useState<Binder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [binderError, setBinderError] = useState('');
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('binder_sidebar_collapsed') === 'true';
   });
@@ -45,12 +47,22 @@ export default function BinderLayout() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
-  useEffect(() => {
+  async function fetchBinder() {
     if (!id) return;
     setLoading(true);
-    getBinderById(id)
-      .then(setBinder)
-      .finally(() => setLoading(false));
+    setBinderError('');
+    try {
+      const data = await getBinderById(id);
+      setBinder(data);
+    } catch (err) {
+      setBinderError(getErrorMessage(err, 'Binder not found'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchBinder();
   }, [id]);
 
   useEffect(() => {
@@ -93,6 +105,14 @@ export default function BinderLayout() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (binderError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <ErrorMessage message={binderError} onRetry={fetchBinder} />
       </div>
     );
   }

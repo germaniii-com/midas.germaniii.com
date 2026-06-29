@@ -1,4 +1,4 @@
-import { API_URL } from '.';
+import { API_URL, apiFetch } from '.';
 
 export interface TransactionAttachment {
   id: string;
@@ -12,7 +12,7 @@ export async function getAttachments(
   binderId: string,
   transactionId: string,
 ): Promise<TransactionAttachment[]> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/${transactionId}/attachments`,
   );
   if (!res.ok) throw new Error('Failed to fetch attachments');
@@ -26,7 +26,7 @@ export async function uploadAttachment(
 ): Promise<TransactionAttachment> {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/${transactionId}/attachments`,
     { method: 'POST', body: formData },
   );
@@ -50,7 +50,7 @@ export async function deleteAttachment(
   transactionId: string,
   attachmentId: string,
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/${transactionId}/attachments/${attachmentId}`,
     { method: 'DELETE' },
   );

@@ -11,6 +11,8 @@ import {
 } from 'recharts';
 import { getSpendingBreakdown, type SpendingRow } from '../../../../api/reports';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
+import { getErrorMessage } from '../../../../utils/toast';
+import { ErrorMessage } from '../../../../components/ErrorMessage';
 
 const COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4',
@@ -32,18 +34,29 @@ export default function SpendingBreakdownChart() {
 
   const [data, setData] = useState<SpendingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
+  async function fetchData() {
     if (!id) return;
     setLoading(true);
-    getSpendingBreakdown(id, {
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      transactionType,
-    })
-      .then(setData)
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
+    setError('');
+    try {
+      const result = await getSpendingBreakdown(id, {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        transactionType,
+      });
+      setData(result);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load spending breakdown'));
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, [id, startDate, endDate, transactionType]);
 
   if (loading) {
@@ -86,7 +99,9 @@ export default function SpendingBreakdownChart() {
           size="sm"
         />
       </div>
-      {data.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchData} />
+      ) : data.length === 0 ? (
         <p className="text-app-muted text-sm py-16 text-center">No data for this period</p>
       ) : (
         <ResponsiveContainer width="100%" height={300}>

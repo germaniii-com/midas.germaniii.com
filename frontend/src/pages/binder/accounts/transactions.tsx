@@ -11,6 +11,7 @@ import { formatDate } from '../../../utils/format';
 import { usePreferences } from '../../../hooks/usePreferences';
 import { Money } from '../../../components/Money';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 
 export default function AccountTransactionsPage() {
   const { id, accountId } = useParams<{ id: string; accountId: string }>();
@@ -147,23 +148,32 @@ export default function AccountTransactionsPage() {
     }
   }
 
-  useEffect(() => {
+  async function fetchData() {
     if (!id || !accountId) return;
     setLoading(true);
+    setError('');
     setHasMore(true);
-    Promise.all([getAccount(id, accountId), getTransactions(id, accountId, undefined, 50, 0), getPayees(id), getUpcomingSchedules(id)])
-      .then(([acc, txs, p, upcomingData]) => {
-        setAccount(acc);
-        setTransactions(txs);
-        setHasMore(txs.length === 50);
-        setPayees(p);
-        setUpcoming(upcomingData.filter((u) => u.schedule.accountId === accountId));
-        setError('');
-      })
-      .catch((err) => {
-        setError(getErrorMessage(err, 'Failed to load'));
-      })
-      .finally(() => setLoading(false));
+    try {
+      const [acc, txs, p, upcomingData] = await Promise.all([
+        getAccount(id, accountId),
+        getTransactions(id, accountId, undefined, 50, 0),
+        getPayees(id),
+        getUpcomingSchedules(id),
+      ]);
+      setAccount(acc);
+      setTransactions(txs);
+      setHasMore(txs.length === 50);
+      setPayees(p);
+      setUpcoming(upcomingData.filter((u) => u.schedule.accountId === accountId));
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, [id, accountId]);
 
   if (loading) {
@@ -216,21 +226,91 @@ export default function AccountTransactionsPage() {
         </div>
       </div>
 
-      {error && <p className="text-danger text-sm mb-4">{error}</p>}
+      {error && transactions.length === 0 ? (
+        <ErrorMessage message={error} onRetry={fetchData} />
+      ) : (
+        <>
+          {error && transactions.length > 0 && (
+            <p className="text-danger text-sm mb-4">{error}</p>
+          )}
 
-      {upcoming.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Scheduled Payments</h2>
-          <div className="hidden sm:block">
-            <Table aria-label="Upcoming payments">
-              <TableHeader>
-                <TableColumn key="due">Due</TableColumn>
-                <TableColumn key="schedule">Schedule</TableColumn>
-                <TableColumn key="payee">Payee</TableColumn>
-                <TableColumn key="amount" align="end">Amount</TableColumn>
-                <TableColumn key="action" hideHeader>Action</TableColumn>
-              </TableHeader>
-              <TableBody>
+          {upcoming.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-3">Scheduled Payments</h2>
+              <div className="hidden sm:block">
+                <Table aria-label="Upcoming payments">
+                  <TableHeader>
+                    <TableColumn key="due">Due</TableColumn>
+                    <TableColumn key="schedule">Schedule</TableColumn>
+                    <TableColumn key="payee">Payee</TableColumn>
+                    <TableColumn key="amount" align="end">Amount</TableColumn>
+                    <TableColumn key="action" hideHeader>Action</TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {upcoming.map((u) => {
+                      const amt = parseFloat(u.schedule.amount);
+                      const statusColors: Record<string, string> = {
+                        missed: 'text-danger',
+                        overdue: 'text-danger',
+                        due_soon: 'text-warning',
+                        upcoming: '',
+                      };
+                      const statusLabels: Record<string, string> = {
+                        missed: 'Missed',
+                        overdue: 'Overdue',
+                        due_soon: 'Due soon',
+                        upcoming: 'Upcoming',
+                      };
+                      const daysText = u.occurrence.daysUntilDue < 0
+                        ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
+                        : u.occurrence.daysUntilDue === 0
+                          ? 'Today'
+                          : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
+
+                      return (
+                        <TableRow key={`${u.schedule.id}-${u.occurrence.dueDate}`} className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]">
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium ${statusColors[u.occurrence.status] || ''}`}>
+                                {formatDate(u.occurrence.dueDate, dateFormat)}
+                              </span>
+                              <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                                ({daysText})
+                              </span>
+                            </div>
+                            <span
+                              className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                                statusColors[u.occurrence.status] || 'text-default-500'
+                              }`}
+                            >
+                              {statusLabels[u.occurrence.status] || ''}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium">{u.schedule.name}</TableCell>
+                          <TableCell>{u.schedule.payeeName || '—'}</TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums text-danger">
+                            -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              color="primary"
+                              variant="flat"
+                              isLoading={payingId === u.schedule.id}
+                              isDisabled={payingId !== null}
+                              onPress={() => handlePaySchedule(u.schedule.id)}
+                              startContent={<CheckIcon width={14} />}
+                            >
+                              Pay
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="space-y-2 sm:hidden">
                 {upcoming.map((u) => {
                   const amt = parseFloat(u.schedule.amount);
                   const statusColors: Record<string, string> = {
@@ -252,318 +332,256 @@ export default function AccountTransactionsPage() {
                       : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
 
                   return (
-                    <TableRow key={`${u.schedule.id}-${u.occurrence.dueDate}`} className="transition-colors duration-150 hover:bg-default-50 dark:hover:bg-white/[0.03]">
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-medium ${statusColors[u.occurrence.status] || ''}`}>
-                            {formatDate(u.occurrence.dueDate, dateFormat)}
-                          </span>
-                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
-                            ({daysText})
-                          </span>
+                    <Card
+                      key={`${u.schedule.id}-${u.occurrence.dueDate}`}
+                      className="w-full bg-surface-secondary transition-all duration-200"
+                    >
+                      <CardBody>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm">{u.schedule.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
+                                {formatDate(u.occurrence.dueDate, dateFormat)}
+                              </span>
+                              <span className={`text-[10px] ${statusColors[u.occurrence.status] || 'text-default-500'}`}>
+                                ({daysText})
+                              </span>
+                            </div>
+                            <span
+                              className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                                statusColors[u.occurrence.status] || 'text-default-500'
+                              }`}
+                            >
+                              {statusLabels[u.occurrence.status] || ''}
+                            </span>
+                            <p className="text-xs text-default-500 mt-1">{u.schedule.payeeName || '—'}</p>
+
+                          </div>
+                          <div className="flex flex-col items-end shrink-0 gap-2">
+                            <span className="text-sm font-semibold tabular-nums text-danger">
+                              -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                            </span>
+                            <Button
+                              size="sm"
+                              color="primary"
+                              variant="flat"
+                              isLoading={payingId === u.schedule.id}
+                              isDisabled={payingId !== null}
+                              onPress={() => handlePaySchedule(u.schedule.id)}
+                              startContent={<CheckIcon width={14} />}
+                            >
+                              Pay
+                            </Button>
+                          </div>
                         </div>
-                        <span
-                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                            statusColors[u.occurrence.status] || 'text-default-500'
-                          }`}
-                        >
-                          {statusLabels[u.occurrence.status] || ''}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-medium">{u.schedule.name}</TableCell>
-                      <TableCell>{u.schedule.payeeName || '—'}</TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums text-danger">
-                        -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          color="primary"
-                          variant="flat"
-                          isLoading={payingId === u.schedule.id}
-                          isDisabled={payingId !== null}
-                          onPress={() => handlePaySchedule(u.schedule.id)}
-                          startContent={<CheckIcon width={14} />}
-                        >
-                          Pay
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                      </CardBody>
+                    </Card>
                   );
                 })}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="space-y-2 sm:hidden">
-            {upcoming.map((u) => {
-              const amt = parseFloat(u.schedule.amount);
-              const statusColors: Record<string, string> = {
-                missed: 'text-danger',
-                overdue: 'text-danger',
-                due_soon: 'text-warning',
-                upcoming: '',
-              };
-              const statusLabels: Record<string, string> = {
-                missed: 'Missed',
-                overdue: 'Overdue',
-                due_soon: 'Due soon',
-                upcoming: 'Upcoming',
-              };
-              const daysText = u.occurrence.daysUntilDue < 0
-                ? `${Math.abs(u.occurrence.daysUntilDue)} day${Math.abs(u.occurrence.daysUntilDue) !== 1 ? 's' : ''} ago`
-                : u.occurrence.daysUntilDue === 0
-                  ? 'Today'
-                  : `In ${u.occurrence.daysUntilDue} day${u.occurrence.daysUntilDue !== 1 ? 's' : ''}`;
+              </div>
+            </div>
+          )}
 
-              return (
-                <Card
-                  key={`${u.schedule.id}-${u.occurrence.dueDate}`}
-                  className="w-full bg-surface-secondary transition-all duration-200"
+          {transactions.length === 0 ? (
+            <div className="text-center py-16 animate-fade-in-up">
+              <p className="text-app-muted text-lg mb-2">No transactions yet</p>
+              <p className="text-app-muted text-sm">Add your first transaction to this account.</p>
+            </div>
+          ) : (
+            <>
+              <div className="hidden sm:block">
+                <Table
+                  aria-label="Account transactions"
+                  onRowAction={(key) => {
+                    navigate(`/binders/${id}/transactions/${key}`);
+                  }}
                 >
-                  <CardBody>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{u.schedule.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-xs ${statusColors[u.occurrence.status] || ''}`}>
-                            {formatDate(u.occurrence.dueDate, dateFormat)}
-                          </span>
-                          <span className={`text-[10px] ${statusColors[u.occurrence.status] || 'text-default-500'}`}>
-                            ({daysText})
-                          </span>
-                        </div>
-                        <span
-                          className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                            statusColors[u.occurrence.status] || 'text-default-500'
+                  <TableHeader>
+                    <TableColumn key="date">Date</TableColumn>
+                    <TableColumn key="payee">Payee</TableColumn>
+                    <TableColumn key="amount" align="end">Amount</TableColumn>
+                    <TableColumn key="actions" hideHeader>Actions</TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((tx) => {
+                      const amt = parseFloat(tx.amount);
+                      const isEditing = editingId === tx.id;
+                      return (
+                        <TableRow
+                          key={tx.id}
+                          className={`transition-colors duration-150 ${
+                            !tx.isCleared ? 'opacity-40' : 'hover:bg-default-50 dark:hover:bg-white/[0.03]'
                           }`}
                         >
-                          {statusLabels[u.occurrence.status] || ''}
-                        </span>
-                        <p className="text-xs text-default-500 mt-1">{u.schedule.payeeName || '—'}</p>
-
-                      </div>
-                      <div className="flex flex-col items-end shrink-0 gap-2">
-                        <span className="text-sm font-semibold tabular-nums text-danger">
-                          -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
-                        </span>
-                        <Button
-                          size="sm"
-                          color="primary"
-                          variant="flat"
-                          isLoading={payingId === u.schedule.id}
-                          isDisabled={payingId !== null}
-                          onPress={() => handlePaySchedule(u.schedule.id)}
-                          startContent={<CheckIcon width={14} />}
-                        >
-                          Pay
-                        </Button>
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {transactions.length === 0 ? (
-        <div className="text-center py-16 animate-fade-in-up">
-          <p className="text-app-muted text-lg mb-2">No transactions yet</p>
-          <p className="text-app-muted text-sm">Add your first transaction to this account.</p>
-        </div>
-      ) : (
-        <>
-          <div className="hidden sm:block">
-            <Table
-              aria-label="Account transactions"
-              onRowAction={(key) => {
-                navigate(`/binders/${id}/transactions/${key}`);
-              }}
-            >
-              <TableHeader>
-                <TableColumn key="date">Date</TableColumn>
-                <TableColumn key="payee">Payee</TableColumn>
-                <TableColumn key="amount" align="end">Amount</TableColumn>
-                <TableColumn key="actions" hideHeader>Actions</TableColumn>
-              </TableHeader>
-              <TableBody>
+                          <TableCell>
+                            {editingDateTxId === tx.id ? (
+                              <input
+                                type="date"
+                                value={editingDateValue}
+                                onChange={(e) => setEditingDateValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveDate(tx.id);
+                                  else if (e.key === 'Escape') setEditingDateTxId(null);
+                                }}
+                                onBlur={() => setEditingDateTxId(null)}
+                                className="rounded border border-primary bg-transparent px-1 py-0.5 text-sm ring-2 ring-primary/20 outline-none transition-all duration-150"
+                                autoFocus
+                              />
+                            ) : (
+                              <span
+                                className="sm:cursor-pointer transition-colors duration-150 hover:text-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingDateTxId(tx.id);
+                                  setEditingDateValue(tx.date);
+                                }}
+                              >
+                                {formatDate(tx.date, dateFormat)}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {tx.transferAccountName ? (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="text-xs text-default-500 font-medium uppercase tracking-wider">
+                                  TRANSFER
+                                </span>
+                                <span className="mx-1 text-default-500">—</span>
+                                <span className="font-medium">{tx.transferAccountName}</span>
+                              </span>
+                            ) : editingPayeeTxId === tx.id ? (
+                              <select
+                                value={tx.payeeId ?? ''}
+                                onChange={(e) => handlePayeeSelect(tx.id, e.target.value || null)}
+                                onBlur={() => setEditingPayeeTxId(null)}
+                                autoFocus
+                                className="max-w-32 rounded border border-primary bg-transparent px-1 py-0.5 text-sm ring-2 ring-primary/20 outline-none transition-all duration-150"
+                              >
+                                <option value="">—</option>
+                                {payees.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <span
+                                className="sm:cursor-pointer transition-colors duration-150 hover:text-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingPayeeTxId(tx.id);
+                                }}
+                              >
+                                {tx.payeeName || '—'}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleSaveAmount(tx.id);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingId(null);
+                                  }
+                                }}
+                                onBlur={() => setEditingId(null)}
+                                className="w-28 rounded border border-primary bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums ring-2 ring-primary/20 outline-none transition-all duration-150"
+                                autoFocus
+                              />
+                            ) : (
+                              <span
+                                className="cursor-pointer sm:cursor-text transition-colors duration-150 hover:text-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingId(tx.id);
+                                  setEditingValue(tx.amount);
+                                }}
+                              >
+                                {amt >= 0 ? '+' : ''}
+                                <Money amount={amt} currency={currency} locale={numberLocale} />
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              isIconOnly
+                              variant="light"
+                              size="sm"
+                              onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
+                              className="transition-all duration-150 active:scale-90"
+                            >
+                              <PencilIcon width={15} />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="space-y-2 sm:hidden">
                 {transactions.map((tx) => {
                   const amt = parseFloat(tx.amount);
-                  const isEditing = editingId === tx.id;
                   return (
-                    <TableRow
+                    <Card
                       key={tx.id}
-                      className={`transition-colors duration-150 ${
-                        !tx.isCleared ? 'opacity-40' : 'hover:bg-default-50 dark:hover:bg-white/[0.03]'
+                      className={`w-full bg-surface-secondary transition-all duration-200 active:scale-[0.98] ${
+                        !tx.isCleared ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'
                       }`}
+                      isPressable
+                      onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
                     >
-                      <TableCell>
-                        {editingDateTxId === tx.id ? (
-                          <input
-                            type="date"
-                            value={editingDateValue}
-                            onChange={(e) => setEditingDateValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveDate(tx.id);
-                              else if (e.key === 'Escape') setEditingDateTxId(null);
-                            }}
-                            onBlur={() => setEditingDateTxId(null)}
-                            className="rounded border border-primary bg-transparent px-1 py-0.5 text-sm ring-2 ring-primary/20 outline-none transition-all duration-150"
-                            autoFocus
-                          />
-                        ) : (
-                          <span
-                            className="sm:cursor-pointer transition-colors duration-150 hover:text-primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingDateTxId(tx.id);
-                              setEditingDateValue(tx.date);
-                            }}
-                          >
-                            {formatDate(tx.date, dateFormat)}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {tx.transferAccountName ? (
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-xs text-default-500 font-medium uppercase tracking-wider">
-                              TRANSFER
+                      <CardBody>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            {tx.transferAccountName ? (
+                              <div className="text-sm font-medium truncate">
+                                <span className="text-xs text-default-500 font-semibold uppercase tracking-wider">TRANSFER </span>
+                                <span className="text-default-500">— </span>
+                                {tx.transferAccountName}
+                              </div>
+                            ) : (
+                              <div className="text-sm font-medium truncate">{tx.payeeName || '—'}</div>
+                            )}
+                            <div className="text-xs text-default-500 mt-0.5">{formatDate(tx.date, dateFormat)}</div>
+                          </div>
+                          <div className="flex flex-col items-end shrink-0">
+                            <span className={`text-sm font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
+                              {amt >= 0 ? '+' : ''}<Money amount={amt} currency={currency} locale={numberLocale} />
                             </span>
-                            <span className="mx-1 text-default-500">—</span>
-                            <span className="font-medium">{tx.transferAccountName}</span>
-                          </span>
-                        ) : editingPayeeTxId === tx.id ? (
-                          <select
-                            value={tx.payeeId ?? ''}
-                            onChange={(e) => handlePayeeSelect(tx.id, e.target.value || null)}
-                            onBlur={() => setEditingPayeeTxId(null)}
-                            autoFocus
-                            className="max-w-32 rounded border border-primary bg-transparent px-1 py-0.5 text-sm ring-2 ring-primary/20 outline-none transition-all duration-150"
-                          >
-                            <option value="">—</option>
-                            {payees.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span
-                            className="sm:cursor-pointer transition-colors duration-150 hover:text-primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingPayeeTxId(tx.id);
-                            }}
-                          >
-                            {tx.payeeName || '—'}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSaveAmount(tx.id);
-                              } else if (e.key === 'Escape') {
-                                setEditingId(null);
-                              }
-                            }}
-                            onBlur={() => setEditingId(null)}
-                            className="w-28 rounded border border-primary bg-transparent px-2 py-1 text-right text-sm font-semibold tabular-nums ring-2 ring-primary/20 outline-none transition-all duration-150"
-                            autoFocus
-                          />
-                        ) : (
-                          <span
-                            className="cursor-pointer sm:cursor-text transition-colors duration-150 hover:text-primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingId(tx.id);
-                              setEditingValue(tx.amount);
-                            }}
-                          >
-                            {amt >= 0 ? '+' : ''}
-                            <Money amount={amt} currency={currency} locale={numberLocale} />
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          isIconOnly
-                          variant="light"
-                          size="sm"
-                          onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
-                          className="transition-all duration-150 active:scale-90"
-                        >
-                          <PencilIcon width={15} />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                            {tx.attachmentCount && tx.attachmentCount > 0 ? (
+                              <span className="inline-flex items-center gap-0.5 text-xs text-default-400 mt-0.5">
+                                <PaperClipIcon width={12} />
+                                {tx.attachmentCount}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
                   );
                 })}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="space-y-2 sm:hidden">
-            {transactions.map((tx) => {
-              const amt = parseFloat(tx.amount);
-              return (
-                <Card
-                  key={tx.id}
-                  className={`w-full bg-surface-secondary transition-all duration-200 active:scale-[0.98] ${
-                    !tx.isCleared ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'
-                  }`}
-                  isPressable
-                  onPress={() => navigate(`/binders/${id}/transactions/${tx.id}`)}
-                >
-                  <CardBody>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        {tx.transferAccountName ? (
-                          <div className="text-sm font-medium truncate">
-                            <span className="text-xs text-default-500 font-semibold uppercase tracking-wider">TRANSFER </span>
-                            <span className="text-default-500">— </span>
-                            {tx.transferAccountName}
-                          </div>
-                        ) : (
-                          <div className="text-sm font-medium truncate">{tx.payeeName || '—'}</div>
-                        )}
-                        <div className="text-xs text-default-500 mt-0.5">{formatDate(tx.date, dateFormat)}</div>
-                      </div>
-                      <div className="flex flex-col items-end shrink-0">
-                        <span className={`text-sm font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
-                          {amt >= 0 ? '+' : ''}<Money amount={amt} currency={currency} locale={numberLocale} />
-                        </span>
-                        {tx.attachmentCount && tx.attachmentCount > 0 ? (
-                          <span className="inline-flex items-center gap-0.5 text-xs text-default-400 mt-0.5">
-                            <PaperClipIcon width={12} />
-                            {tx.attachmentCount}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              );
-            })}
-          </div>
-          {hasMore && (
-            <div className="flex justify-center mt-6 pb-20 sm:pb-0">
-              <Button
-                variant="flat"
-                color="primary"
-                isLoading={loadingMore}
-                isDisabled={loadingMore}
-                onPress={loadMore}
-              >
-                Load More
-              </Button>
-            </div>
+              </div>
+              {hasMore && (
+                <div className="flex justify-center mt-6 pb-20 sm:pb-0">
+                  <Button
+                    variant="flat"
+                    color="primary"
+                    isLoading={loadingMore}
+                    isDisabled={loadingMore}
+                    onPress={loadMore}
+                  >
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}

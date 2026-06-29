@@ -1,4 +1,4 @@
-import { API_URL } from '.';
+import { API_URL, apiFetch } from '.';
 
 export interface TransactionTag {
   id: string;
@@ -69,7 +69,7 @@ export async function getTransactions(
   if (limit !== undefined) params.set('limit', String(limit));
   if (offset !== undefined) params.set('offset', String(offset));
   const qs = params.toString();
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions${qs ? `?${qs}` : ''}`,
   );
   if (!res.ok) throw new Error('Failed to fetch transactions');
@@ -80,7 +80,7 @@ export async function getTransaction(
   binderId: string,
   transactionId: string,
 ): Promise<Transaction> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/${transactionId}`,
   );
   if (!res.ok) throw new Error('Transaction not found');
@@ -91,7 +91,7 @@ export async function createTransaction(
   binderId: string,
   data: CreateTransactionData,
 ): Promise<Transaction> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/create`,
     {
       method: 'POST',
@@ -113,7 +113,7 @@ export async function updateTransaction(
   transactionId: string,
   data: UpdateTransactionData,
 ): Promise<Transaction> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/${transactionId}`,
     {
       method: 'PUT',
@@ -134,7 +134,7 @@ export async function deleteTransaction(
   binderId: string,
   transactionId: string,
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/transactions/${transactionId}`,
     { method: 'DELETE' },
   );

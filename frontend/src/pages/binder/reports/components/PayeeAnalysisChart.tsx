@@ -4,6 +4,8 @@ import { Spinner, Button, Input } from '@heroui/react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getPayeeAnalysis, type PayeeRow } from '../../../../api/reports';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
+import { getErrorMessage } from '../../../../utils/toast';
+import { ErrorMessage } from '../../../../components/ErrorMessage';
 
 export default function PayeeAnalysisChart() {
   const { id } = useParams<{ id: string }>();
@@ -20,19 +22,30 @@ export default function PayeeAnalysisChart() {
 
   const [data, setData] = useState<PayeeRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
+  async function fetchData() {
     if (!id) return;
     setLoading(true);
-    getPayeeAnalysis(id, {
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      sortBy,
-      limit,
-    })
-      .then(setData)
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
+    setError('');
+    try {
+      const result = await getPayeeAnalysis(id, {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        sortBy,
+        limit,
+      });
+      setData(result);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load payee analysis'));
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, [id, startDate, endDate, sortBy, limit]);
 
   if (loading) {
@@ -98,7 +111,9 @@ export default function PayeeAnalysisChart() {
           size="sm"
         />
       </div>
-      {data.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchData} />
+      ) : data.length === 0 ? (
         <p className="text-app-muted text-sm py-16 text-center">No data for this period</p>
       ) : (
         <ResponsiveContainer width="100%" height={300}>

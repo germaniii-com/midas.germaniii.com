@@ -5,6 +5,7 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import { getTags, type Tag } from '../../../api/tags';
 import { useTheme } from '../../../hooks/useTheme';
 import { getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 
 export default function TagsPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,11 +54,9 @@ export default function TagsPage() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-danger text-sm mb-4">{error}</p>
-      )}
-
-      {tags.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchTags} />
+      ) : tags.length === 0 ? (
         <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No tags yet</p>
           <p className="text-app-muted text-sm">

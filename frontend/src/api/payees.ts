@@ -1,4 +1,4 @@
-import { API_URL } from '.';
+import { API_URL, apiFetch } from '.';
 
 export interface Payee {
   id: string;
@@ -8,7 +8,7 @@ export interface Payee {
 }
 
 export async function getPayees(binderId: string): Promise<Payee[]> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payees`);
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/payees`);
   if (!res.ok) throw new Error('Failed to fetch payees');
   return res.json();
 }
@@ -17,7 +17,7 @@ export async function createPayee(
   binderId: string,
   name: string,
 ): Promise<Payee> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_URL}/api/binders/${binderId}/payees/create`,
     {
       method: 'POST',
@@ -38,7 +38,7 @@ export async function getPayee(
   binderId: string,
   payeeId: string,
 ): Promise<Payee> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payees/${payeeId}`);
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/payees/${payeeId}`);
   if (!res.ok) throw new Error('Payee not found');
   return res.json();
 }
@@ -48,7 +48,7 @@ export async function updatePayee(
   payeeId: string,
   data: { name?: string },
 ): Promise<Payee> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payees/${payeeId}`, {
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/payees/${payeeId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -64,7 +64,7 @@ export async function deletePayee(
   binderId: string,
   payeeId: string,
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/api/binders/${binderId}/payees/${payeeId}`, {
+  const res = await apiFetch(`${API_URL}/api/binders/${binderId}/payees/${payeeId}`, {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Failed to delete payee');

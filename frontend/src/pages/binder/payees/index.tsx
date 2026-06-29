@@ -4,6 +4,7 @@ import { Button, Card, CardBody, Spinner } from '@heroui/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { getPayees, type Payee } from '../../../api/payees';
 import { getErrorMessage } from '../../../utils/toast';
+import { ErrorMessage } from '../../../components/ErrorMessage';
 
 export default function PayeesPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,11 +52,9 @@ export default function PayeesPage() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-danger text-sm mb-4">{error}</p>
-      )}
-
-      {payees.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} onRetry={fetchPayees} />
+      ) : payees.length === 0 ? (
         <div className="text-center py-16 animate-fade-in-up">
           <p className="text-app-muted text-lg mb-2">No payees yet</p>
           <p className="text-app-muted text-sm">

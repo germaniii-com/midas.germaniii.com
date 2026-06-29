@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Card, CardBody, Spinner } from '@heroui/react';
 import { PlusIcon, ArrowUpTrayIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { getBinders, type Binder } from '../../api/binders';
+import { getErrorMessage } from '../../utils/toast';
+import { ErrorMessage } from '../../components/ErrorMessage';
 import { useTheme } from '../../hooks/useTheme';
 import BinderCard from './components/BinderCard';
 import BinderLoginModal from './components/BinderLoginModal';
@@ -12,20 +14,43 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [binders, setBinders] = useState<Binder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedBinder, setSelectedBinder] = useState<Binder | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const { theme, toggle } = useTheme();
 
+  async function fetchBinders() {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getBinders();
+      setBinders(data);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load binders'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    getBinders()
-      .then(setBinders)
-      .finally(() => setLoading(false));
+    fetchBinders();
   }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold sm:text-3xl">Midas</h1>
+        </div>
+        <ErrorMessage message={error} onRetry={fetchBinders} />
       </div>
     );
   }
