@@ -4,4 +4,3 @@ postgres_data/
 minio_data/
 .env
 frontend/t
-frontend/src-tauri/target/
