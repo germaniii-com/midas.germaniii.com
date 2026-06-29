@@ -46,13 +46,13 @@ export default function HomePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card isPressable onPress={() => setImportOpen(true)} className="min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
+        <Card isPressable onPress={() => setImportOpen(true)} className="w-full min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
           <CardBody className="flex flex-col items-center justify-center p-5 gap-2">
             <ArrowUpTrayIcon width={24} className="text-app-muted" />
             <span className="text-app-muted font-medium">Import Binder</span>
           </CardBody>
         </Card>
-        <Card isPressable onPress={() => navigate('/create')} className="min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
+        <Card isPressable onPress={() => navigate('/create')} className="w-full min-h-[120px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
           <CardBody className="flex flex-col items-center justify-center p-5 gap-2">
             <PlusIcon width={24} className="text-app-muted" />
             <span className="text-app-muted font-medium">Create Binder</span>
