@@ -7,6 +7,7 @@ import {
   TagIcon,
   FolderIcon,
   BuildingOfficeIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 
 export interface NavItem {
@@ -23,4 +24,5 @@ export const navItems: NavItem[] = [
   { label: 'Tags', path: 'tags', icon: TagIcon },
   { label: 'Categories', path: 'categories', icon: FolderIcon },
   { label: 'Payees', path: 'payees', icon: BuildingOfficeIcon },
+  { label: 'Tools', path: 'tools', icon: WrenchScrewdriverIcon },
 ];
