@@ -28,8 +28,8 @@ fi
 
 echo "All required variables are set."
 
-if [ -d "/data" ]; then
-  chown -R 1000:1000 /data
+if [ -d "$DATABASE_DIR" ]; then
+  chown -R 1000:1000 "$DATABASE_DIR"
 fi
 
 exec "$@"
