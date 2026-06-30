@@ -435,4 +435,53 @@ export async function syncRoutes(app: FastifyInstance) {
       });
     },
   );
+
+  app.get<{ Params: { id: string; targetId: string } }>(
+    '/binders/:id/sync-targets/:targetId/export',
+    async (req, reply) => {
+      const { id: binderId, targetId } = req.params;
+
+      const [target] = await db.select()
+        .from(syncTargets)
+        .where(
+          and(eq(syncTargets.id, targetId), eq(syncTargets.binderId, binderId)),
+        )
+        .limit(1);
+
+      if (!target) {
+        return reply.status(404).send({ error: 'Sync target not found' });
+      }
+
+      const exportUrl = `${target.host}/api/binders/${binderId}/export`;
+
+      try {
+        const res = await fetch(exportUrl, {
+          headers: {
+            'x-sync-password': target.password,
+          },
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => 'Export failed');
+          return reply.status(res.status).send({ error: errorText });
+        }
+
+        const contentType = res.headers.get('content-type') || 'application/sql';
+        const contentDisposition = res.headers.get('content-disposition') || `attachment; filename="remote-export-${new Date().toISOString().slice(0, 10)}.sql"`;
+
+        reply.header('Content-Type', contentType);
+        reply.header('Content-Disposition', contentDisposition);
+
+        if (!res.body) {
+          return reply.status(502).send({ error: 'No response body from remote' });
+        }
+
+        const buffer = Buffer.from(await res.arrayBuffer());
+        return reply.send(buffer);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to fetch export from remote';
+        return reply.status(502).send({ error: message });
+      }
+    },
+  );
 }

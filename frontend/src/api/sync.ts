@@ -101,3 +101,17 @@ export async function getSyncStatus(
   if (!res.ok) throw new Error('Failed to get sync status');
   return res.json();
 }
+
+export async function exportRemoteBinder(
+  binderId: string,
+  targetId: string,
+): Promise<Blob> {
+  const res = await apiFetch(
+    `${API_URL}/api/binders/${binderId}/sync-targets/${targetId}/export`,
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to export from remote' }));
+    throw new Error(err.error || 'Failed to export from remote');
+  }
+  return res.blob();
+}

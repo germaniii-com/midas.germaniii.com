@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Button, Input, Select, SelectItem, Progress, Tooltip } from '@heroui/react';
-import { PlusIcon, TrashIcon, ArrowPathIcon, XMarkIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowPathIcon, XMarkIcon, CheckCircleIcon, ExclamationCircleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { useSync } from '../../../hooks/useSync';
+import { exportRemoteBinder } from '../../../api/sync';
 import { toastSuccess, toastError, getErrorMessage } from '../../../utils/toast';
 
 const AUTO_SYNC_OPTIONS = [
@@ -15,6 +17,7 @@ const AUTO_SYNC_OPTIONS = [
 ];
 
 export default function SyncSection() {
+  const { id: binderId } = useParams<{ id: string }>();
   const { targets, statuses, loading, syncingIds, addTarget, removeTarget, triggerSync } = useSync();
   const [showForm, setShowForm] = useState(false);
   const [host, setHost] = useState('');
@@ -54,6 +57,22 @@ export default function SyncSection() {
 
   async function handleSync(targetId: string) {
     await triggerSync(targetId);
+  }
+
+  async function handleExportRemote(targetId: string) {
+    if (!binderId) return;
+    try {
+      const blob = await exportRemoteBinder(binderId, targetId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `remote-export-${new Date().toISOString().slice(0, 10)}.sql`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toastSuccess('Remote binder exported');
+    } catch (err) {
+      toastError(getErrorMessage(err, 'Failed to export from remote'));
+    }
   }
 
   function StatusBadge({ targetId }: { targetId: string }) {
@@ -185,6 +204,9 @@ export default function SyncSection() {
                   <div className="flex gap-1 shrink-0">
                     <Button isIconOnly size="sm" variant="light" isDisabled={isSyncing} onPress={() => handleSync(target.id)} aria-label="Sync now">
                       <ArrowPathIcon width={16} className={isSyncing ? 'animate-spin' : ''} />
+                    </Button>
+                    <Button isIconOnly size="sm" variant="light" onPress={() => handleExportRemote(target.id)} aria-label="Export remote binder">
+                      <ArrowDownTrayIcon width={16} />
                     </Button>
                     <Button isIconOnly size="sm" variant="light" color="danger" isDisabled={isSyncing} onPress={() => handleDelete(target.id)} aria-label="Remove">
                       <TrashIcon width={16} />
