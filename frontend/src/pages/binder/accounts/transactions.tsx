@@ -288,8 +288,8 @@ export default function AccountTransactionsPage() {
                           </TableCell>
                           <TableCell className="font-medium">{u.schedule.name}</TableCell>
                           <TableCell>{u.schedule.payeeName || '—'}</TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums text-danger">
-                            -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                          <TableCell className={`text-right font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
+                            {amt >= 0 ? '+' : ''}<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
                           </TableCell>
                           <TableCell>
                             <Button
@@ -359,8 +359,8 @@ export default function AccountTransactionsPage() {
 
                           </div>
                           <div className="flex flex-col items-end shrink-0 gap-2">
-                            <span className="text-sm font-semibold tabular-nums text-danger">
-                              -<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
+                            <span className={`text-sm font-semibold tabular-nums ${amt >= 0 ? 'text-success' : 'text-danger'}`}>
+                              {amt >= 0 ? '+' : ''}<Money amount={Math.abs(amt)} currency={currency} locale={numberLocale} />
                             </span>
                             <Button
                               size="sm"
