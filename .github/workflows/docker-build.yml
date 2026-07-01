@@ -19,8 +19,21 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4 # Allowed: This is an internal GitHub action
+      - name: Checkout Code Manually
+        run: |
+          # Configure git
+          git config --global init.defaultBranch main
+          git init
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          
+          # Fetch only the necessary ref
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch --depth=1 origin +refs/pull/${{ github.event.pull_request.number }}/merge:refs/remotes/origin/pr
+            git checkout -q origin/pr
+          else
+            git fetch --depth=1 origin ${{ github.sha }}
+            git checkout -q ${{ github.sha }}
+          fi
 
       - name: Log in to Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
