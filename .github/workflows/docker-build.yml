@@ -47,7 +47,7 @@ jobs:
 
       - name: Build and Push
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}/${{ matrix.target }}"
+          IMAGE="ghcr.io/${{ github.repository }}/${{ matrix.target }}"
           IMAGE="${IMAGE,,}" # Ensure lowercase
           
           # Build arguments

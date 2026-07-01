@@ -92,7 +92,7 @@ version: '3.8'
 
 services:
   api:
-    image: ghcr.io/germaniii-com/germaniii-com/midas/backend
+    image: ghcr.io/germaniii-com/midas/backend
     platform: linux/amd64
     ports:
       - "5001:5000"
@@ -107,7 +107,7 @@ services:
     restart: always
 
   web:
-    image: ghcr.io/germaniii-com/germaniii-com/midas/frontend
+    image: ghcr.io/germaniii-com/midas/frontend
     platform: linux/amd64
     ports:
       - "5173:80"
