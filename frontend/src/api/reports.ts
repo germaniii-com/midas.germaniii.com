@@ -28,6 +28,7 @@ export interface CashFlowParams {
   endDate?: string;
   interval?: 'daily' | 'weekly' | 'monthly';
   accountIds?: string;
+  tagIds?: string;
 }
 
 export interface SpendingBreakdownParams {

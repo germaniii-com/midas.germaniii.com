@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { getCashFlow, type CashFlowRow } from '../../../../api/reports';
 import { getAccounts, type Account } from '../../../../api/accounts';
+import { getTags, type Tag } from '../../../../api/tags';
 import { formatCurrency, useBinderCurrency } from '../../../../utils/format';
 import { usePreferences } from '../../../../hooks/usePreferences';
 import { getErrorMessage } from '../../../../utils/toast';
@@ -32,6 +33,8 @@ export default function CashFlowChart() {
   const [interval, setInterval] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
 
   const [data, setData] = useState<CashFlowRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +42,14 @@ export default function CashFlowChart() {
 
   useEffect(() => {
     if (!id) return;
-    getAccounts(id)
-      .then((res) => setAccounts(res.accounts))
+    Promise.all([
+      getAccounts(id),
+      getTags(id),
+    ])
+      .then(([res, tags]) => {
+        setAccounts(res.accounts);
+        setTags(tags);
+      })
       .catch(() => {});
   }, [id]);
 
@@ -54,6 +63,7 @@ export default function CashFlowChart() {
         endDate: endDate || undefined,
         interval,
         accountIds: selectedAccountIds.length > 0 ? selectedAccountIds.join(',') : undefined,
+        tagIds: selectedTagIds.length > 0 ? selectedTagIds.join(',') : undefined,
       });
       setData(result);
     } catch (err) {
@@ -66,7 +76,7 @@ export default function CashFlowChart() {
 
   useEffect(() => {
     fetchData();
-  }, [id, startDate, endDate, interval, selectedAccountIds]);
+  }, [id, startDate, endDate, interval, selectedAccountIds, selectedTagIds]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><Spinner size="lg" /></div>;
@@ -125,6 +135,28 @@ export default function CashFlowChart() {
         >
           {accounts.map((a) => (
             <SelectItem key={a.id}>{a.name}</SelectItem>
+          ))}
+        </Select>
+        <Select
+          label="Tags"
+          placeholder="All tags"
+          selectionMode="multiple"
+          selectedKeys={new Set(selectedTagIds)}
+          onSelectionChange={(keys) =>
+            setSelectedTagIds(Array.from(keys).map(String).filter(Boolean))
+          }
+          className="w-44"
+          size="sm"
+        >
+          {tags.map((t) => (
+            <SelectItem key={t.id} textValue={t.name}>
+              <div className="flex items-center gap-2">
+                {t.color && (
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                )}
+                <span>{t.name}</span>
+              </div>
+            </SelectItem>
           ))}
         </Select>
       </div>

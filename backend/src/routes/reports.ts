@@ -30,6 +30,7 @@ export async function reportRoutes(app: FastifyInstance) {
       endDate?: string;
       interval?: 'daily' | 'weekly' | 'monthly';
       accountIds?: string;
+      tagIds?: string;
     };
   }>('/binders/:id/reports/cash-flow', async (req, reply) => {
     const { id } = req.params;
@@ -38,10 +39,15 @@ export async function reportRoutes(app: FastifyInstance) {
       endDate = format(new Date(), 'yyyy-MM-dd'),
       interval = 'monthly',
       accountIds,
+      tagIds,
     } = req.query;
 
     const accountIdList = accountIds
       ? accountIds.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const tagIdList = tagIds
+      ? tagIds.split(',').map((s) => s.trim()).filter(Boolean)
       : [];
 
     const truncExpr = truncMap[interval];
@@ -52,6 +58,13 @@ export async function reportRoutes(app: FastifyInstance) {
     ];
     if (accountIdList.length > 0) {
       conditions.push(inArray(transactions.accountId, accountIdList));
+    }
+    if (tagIdList.length > 0) {
+      const matchingTxIds = db
+        .select({ transactionId: transactionTags.transactionId })
+        .from(transactionTags)
+        .where(inArray(transactionTags.tagId, tagIdList));
+      conditions.push(inArray(transactions.id, matchingTxIds));
     }
 
     const result = await db

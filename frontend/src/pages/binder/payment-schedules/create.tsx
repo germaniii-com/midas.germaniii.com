@@ -215,7 +215,7 @@ export default function CreatePaymentSchedulePage() {
             selectedKeys={payeeId ? [payeeId] : []}
             onSelectionChange={(keys) => {
               const val = Array.from(keys)[0];
-              if (val) setPayeeId(String(val));
+              setPayeeId(val ? String(val) : '');
             }}
             className="flex-1"
           >
